@@ -1,1 +1,2 @@
 - [API date format normalization](date-format-normalization.md) — normalize generated calendar dates before UI formatting because they may arrive as ISO timestamps.
+- [Package manager version alignment](package-manager-version-alignment.md) — keep the packageManager pin compatible with the runtime pnpm version so workflows can start.
