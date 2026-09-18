@@ -21,10 +21,10 @@ export function RsvpShell({ children, showBack = true }: { children: (event: Eve
     <main className="page">
       <div className="topbar">
         {showBack && <Link className="topbar-link" href="/" data-testid="link-back-invitation"><ArrowLeft size={16} /> {t.back}</Link>}
+        <LangSwitch />
       </div>
       <article className="card rsvp-page">
         <Corners />
-        <LangSwitch />
         {eventQuery.isLoading ? (
           <p className="admin-muted center-text">{t.loading}</p>
         ) : eventQuery.isError || !event ? (

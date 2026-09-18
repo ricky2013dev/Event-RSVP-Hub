@@ -78,9 +78,9 @@ function Invitation() {
           </div>
         </div>
       )}
+      <div className="topbar"><LangSwitch /></div>
       <article className="card" data-testid="invitation-card">
         <Corners />
-        <LangSwitch />
 
         <div className="photo-wrap">
           {cardStyle.sparkles.map((glyph, index) => <span className={`sparkle s${index + 1}`} key={index}>{glyph}</span>)}
