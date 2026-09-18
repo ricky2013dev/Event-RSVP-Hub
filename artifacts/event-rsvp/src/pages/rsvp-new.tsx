@@ -101,8 +101,8 @@ function RsvpForm({ event }: { event: Event }) {
     return (
       <div className="panel">
         <div className="panel-head">
-          <h1>입력하신 내용을 확인해 주세요</h1>
-          <p>아래 내용으로 참석을 등록합니다.</p>
+          <h1>내용확인후 제출하기를 클릭해 주세요</h1>
+          <p>제출하기 버튼을 클릭하시면 등록됩니다.</p>
           <Flourish />
         </div>
         <FamilyDetails
