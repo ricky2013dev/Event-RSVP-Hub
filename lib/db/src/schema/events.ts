@@ -1,4 +1,6 @@
-import { integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { integer, jsonb, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+
+export type ChoiceOption = { value: string; label: string };
 
 export const eventsTable = pgTable("events", {
   id: serial("id").primaryKey(),
@@ -17,8 +19,19 @@ export const eventsTable = pgTable("events", {
   imageUrl: text("image_url").notNull().default(""),
   featuredNote: text("featured_note").notNull().default(""),
   theme: text("theme").notNull().default("rose"),
+  // Card shape and ornaments, picked from the kind of event (dinner, birthday, …).
+  cardStyle: text("card_style").notNull().default("classic"),
+  // The two colours the "custom" theme derives its whole palette from.
+  themeColor: text("theme_color").notNull().default("#d6848d"),
+  themeAccent: text("theme_accent").notNull().default("#c9a24a"),
   // Label for the RSVP form's team field; empty hides the field.
   belongTeamLabel: text("belong_team_label").notNull().default("소속 팀"),
+  // Label for the RSVP form's department field; empty hides the field.
+  belongDeptLabel: text("belong_dept_label").notNull().default("소속 부서"),
+  // Choices for the department field; empty leaves it a free-text box.
+  belongDeptOptions: jsonb("belong_dept_options").$type<ChoiceOption[]>().notNull().default([]),
+  // How many tables the seating board shows; the admin adds them one at a time.
+  tableCount: integer("table_count").notNull().default(20),
   // Heading and placeholder for the RSVP form's message box; an empty label hides it.
   messageLabel: text("message_label").notNull().default("축하 메시지"),
   messagePlaceholder: text("message_placeholder").notNull().default("따뜻한 한마디를 남겨주세요."),

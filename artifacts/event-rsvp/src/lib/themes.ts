@@ -21,6 +21,13 @@ type Palette = {
 
 export type Theme = { id: EventTheme; name: string; colors: Palette };
 
+// What an event stores about its colours: a ready-made palette, or the two
+// colours the custom one is built from.
+export type ThemeChoice = { theme: string; themeColor: string; themeAccent: string };
+
+export const DEFAULT_THEME_COLOR = '#d6848d';
+export const DEFAULT_THEME_ACCENT = '#c9a24a';
+
 // Keep ids in sync with the EventTheme enum in lib/api-spec/openapi.yaml.
 export const THEMES: Theme[] = [
   {
@@ -77,12 +84,66 @@ export function findTheme(id: string | undefined): Theme {
   return THEMES.find((theme) => theme.id === id) ?? THEMES[0];
 }
 
+type Hsl = { h: number; s: number; l: number };
+
+function hexToHsl(hex: string): Hsl {
+  const value = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  const int = value ? parseInt(value[1], 16) : 0xd6848d;
+  const [red, green, blue] = [(int >> 16) & 255, (int >> 8) & 255, int & 255].map((part) => part / 255);
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  const span = max - min;
+  const l = (max + min) / 2;
+  if (span === 0) return { h: 0, s: 0, l: l * 100 };
+  const hue = max === red ? (green - blue) / span + (green < blue ? 6 : 0) : max === green ? (blue - red) / span + 2 : (red - green) / span + 4;
+  return { h: hue * 60, s: (span / (1 - Math.abs(2 * l - 1))) * 100, l: l * 100 };
+}
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+const css = ({ h, s, l }: Hsl) => `hsl(${Math.round(h)} ${Math.round(s)}% ${Math.round(l)}%)`;
+
+// A picked colour only sets the hue and how vivid it is; the rest of the tokens are
+// derived from it so a custom card keeps the contrast of the ready-made palettes.
+export function customPalette(color: string, accent: string): Palette {
+  const main = hexToHsl(color);
+  const gold = hexToHsl(accent);
+  const tone = (s: number, l: number, h = main.h) => css({ h, s, l });
+  const rose = clamp(main.l, 42, 64);
+  return {
+    bg: tone(clamp(main.s * 0.3, 10, 38), 94),
+    bgGlow: tone(clamp(main.s * 0.45, 14, 52), 90),
+    card: tone(clamp(main.s * 0.3, 8, 34), 99),
+    ink: tone(clamp(main.s * 0.2, 8, 22), 23),
+    inkSoft: tone(clamp(main.s * 0.18, 8, 20), 37),
+    muted: tone(clamp(main.s * 0.16, 6, 18), 52),
+    gold: css({ h: gold.h, s: clamp(gold.s, 12, 78), l: clamp(gold.l, 36, 62) }),
+    goldSoft: css({ h: gold.h, s: clamp(gold.s * 0.75, 12, 62), l: 78 }),
+    line: tone(clamp(main.s * 0.35, 10, 42), 89),
+    cream: tone(clamp(gold.s * 0.4, 10, 45), 96, gold.h),
+    tint: tone(clamp(main.s * 0.42, 12, 48), 95),
+    rose: css({ h: main.h, s: clamp(main.s, 18, 72), l: rose }),
+    roseDeep: css({ h: main.h, s: clamp(main.s, 20, 78), l: rose - 9 }),
+    roseSoft: tone(clamp(main.s * 0.7, 18, 62), 94),
+    shadow: tone(clamp(main.s * 0.4, 14, 50), 32),
+  };
+}
+
+export function customTheme(color: string, accent: string): Theme {
+  return { id: 'custom', name: '직접 고르기', colors: customPalette(color, accent) };
+}
+
+export function resolveTheme(choice: ThemeChoice | undefined): Theme {
+  if (choice?.theme === 'custom') return customTheme(choice.themeColor, choice.themeAccent);
+  return findTheme(choice?.theme);
+}
+
 // Applies the palette to <html> so every page (and the body background) picks it up.
-export function useTheme(id: string | undefined) {
+export function useTheme(choice: ThemeChoice | undefined) {
+  const { theme, themeColor, themeAccent } = choice ?? {};
   useEffect(() => {
-    if (!id) return;
-    const { colors } = findTheme(id);
+    if (!theme) return;
+    const { colors } = resolveTheme({ theme, themeColor: themeColor ?? DEFAULT_THEME_COLOR, themeAccent: themeAccent ?? DEFAULT_THEME_ACCENT });
     const style = document.documentElement.style;
     for (const key of Object.keys(VARS) as (keyof Palette)[]) style.setProperty(VARS[key], colors[key]);
-  }, [id]);
+  }, [theme, themeColor, themeAccent]);
 }

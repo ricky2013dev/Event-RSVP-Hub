@@ -27,13 +27,16 @@ function RsvpForm({ event }: { event: Event }) {
   const [motherName, setMotherName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [belongTeam, setBelongTeam] = useState('');
+  const [belongDept, setBelongDept] = useState(() => event.belongDeptOptions[0]?.value ?? '');
   const [message, setMessage] = useState('');
   const [children, setChildren] = useState<ChildRow[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState('');
 
   const labels = labelsFor(event);
-  const { teamLabel, messageLabel } = labels;
+  const { teamLabel, deptLabel, deptOptions, messageLabel } = labels;
+  const deptAsText = Boolean(deptLabel) && deptOptions.length === 0;
+  const deptRequired = Boolean(deptLabel) && deptOptions.length > 0;
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
@@ -53,6 +56,7 @@ function RsvpForm({ event }: { event: Event }) {
   function review() {
     const next: Record<string, string> = {};
     if (!fatherName.trim() && !motherName.trim()) next.parents = '아빠 또는 엄마 이름 중 최소 한 분은 입력해 주세요.';
+    if (deptRequired && !belongDept.trim()) next.belongDept = `${deptLabel}을(를) 선택해 주세요.`;
     children.forEach((child, index) => {
       const name = child.name.trim();
       const age = child.age.trim();
@@ -74,6 +78,7 @@ function RsvpForm({ event }: { event: Event }) {
           motherName: motherName.trim(),
           phoneNumber: phoneNumber.trim() || null,
           belongTeam: (teamLabel && belongTeam.trim()) || null,
+          belongDept: (deptLabel && belongDept.trim()) || null,
           children: completeChildren,
           message: (messageLabel && message.trim()) || null,
         },
@@ -102,7 +107,7 @@ function RsvpForm({ event }: { event: Event }) {
         </div>
         <FamilyDetails
           labels={labels}
-          family={{ fatherName: fatherName.trim(), motherName: motherName.trim(), phone: phoneNumber.trim(), belongTeam: teamLabel ? belongTeam.trim() : null, children: completeChildren, message: messageLabel ? message.trim() : null }}
+          family={{ fatherName: fatherName.trim(), motherName: motherName.trim(), phone: phoneNumber.trim(), belongDept: deptLabel ? belongDept.trim() : null, belongTeam: teamLabel ? belongTeam.trim() : null, children: completeChildren, message: messageLabel ? message.trim() : null }}
         />
         <TotalBar adults={adultCount} children={completeChildren.length} testId="text-confirm-total" />
         {submitError && <p className="error" role="alert">{submitError}</p>}
@@ -127,9 +132,31 @@ function RsvpForm({ event }: { event: Event }) {
           <label className="field"><span>엄마 이름</span><input value={motherName} onChange={(e) => { setMotherName(e.target.value); setErrors((x) => ({ ...x, parents: '' })); }} placeholder="김영희" data-testid="input-mother-name" /></label>
         </div>
         {errors.parents && <p className="field-error">{errors.parents}</p>}
-        <label className="field"><span>연락처 <em>(선택)</em></span><input type="tel" inputMode="tel" autoComplete="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(formatPhone(e.target.value))} placeholder="972-555-0123" data-testid="input-phone" /></label>
-        {teamLabel && (
-          <label className="field"><span>{teamLabel} <em>(선택)</em></span><input value={belongTeam} maxLength={50} onChange={(e) => setBelongTeam(e.target.value)} data-testid="input-belong-team" /></label>
+        <label className="field"><span>연락처 <em>(옵션사항)</em></span><input type="tel" inputMode="tel" autoComplete="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(formatPhone(e.target.value))} placeholder="972-555-0123" data-testid="input-phone" /></label>
+        {/* Choices need the full width; a plain text box still pairs up with the team field. */}
+        {deptLabel && deptOptions.length > 0 && (
+          <fieldset className="field choice-field">
+            <legend>{deptLabel}</legend>
+            <div className="choices">
+              {deptOptions.map((option) => (
+                <label className={`choice ${belongDept === option.value ? 'on' : ''}`} key={option.value}>
+                  <input type="radio" name="belong-dept" value={option.value} checked={belongDept === option.value} onChange={() => { setBelongDept(option.value); setErrors((x) => ({ ...x, belongDept: '' })); }} data-testid={`radio-belong-dept-${option.value}`} />
+                  {option.label}
+                </label>
+              ))}
+            </div>
+            {errors.belongDept && <p className="field-error">{errors.belongDept}</p>}
+          </fieldset>
+        )}
+        {(deptAsText || teamLabel) && (
+          <div className={deptAsText && teamLabel ? 'two-col' : undefined}>
+            {deptAsText && (
+              <label className="field"><span>{deptLabel} <em>(옵션사항)</em></span><input value={belongDept} maxLength={50} onChange={(e) => setBelongDept(e.target.value)} data-testid="input-belong-dept" /></label>
+            )}
+            {teamLabel && (
+              <label className="field"><span>{teamLabel} <em>(옵션사항)</em></span><input value={belongTeam} maxLength={50} onChange={(e) => setBelongTeam(e.target.value)} data-testid="input-belong-team" /></label>
+            )}
+          </div>
         )}
       </section>
 
@@ -159,7 +186,7 @@ function RsvpForm({ event }: { event: Event }) {
 
       {messageLabel && (
         <section className="form-section">
-          <RuledLabel>{messageLabel} (선택)</RuledLabel>
+          <RuledLabel>{messageLabel} (옵션사항)</RuledLabel>
           <label className="field"><span className="sr-only">{messageLabel}</span><textarea rows={2} maxLength={500} value={message} onChange={(e) => setMessage(e.target.value)} placeholder={event.messagePlaceholder} data-testid="input-message" /></label>
         </section>
       )}

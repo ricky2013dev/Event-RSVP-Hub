@@ -20,11 +20,20 @@ export interface Rsvp {
   /** @nullable */
   belongTeam: string | null;
   /** @nullable */
+  belongDept: string | null;
+  /** @nullable */
   email: string | null;
   children: RsvpChild[];
   adultCount: number;
   childCount: number;
   guestCount: number;
+  /**
+     * Table the family is seated at; assigned by the admin only
+     * @minimum 1
+     * @maximum 50
+     * @nullable
+     */
+  tableNumber: number | null;
   /** @nullable */
   message: string | null;
   createdAt: Date;

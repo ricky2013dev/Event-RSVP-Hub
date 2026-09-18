@@ -1,8 +1,12 @@
 import { and, desc, eq, sql } from "drizzle-orm";
-import type { Rsvp } from "@workspace/db";
+import type { Rsvp, RsvpChild } from "@workspace/db";
 import { Router, type IRouter } from "express";
 import {
+  AssignRsvpTableBody,
+  AssignRsvpTableParams,
+  AssignRsvpTableResponse,
   CreateRsvpBody,
+  DeleteRsvpParams,
   CreateRsvpResponse,
   GetEventResponse,
   GetRsvpSummaryResponse,
@@ -13,6 +17,10 @@ import {
   LookupRsvpsResponse,
   UpdateEventBody,
   UpdateEventResponse,
+  UpdateRsvpBody,
+  UpdateRsvpParams,
+  UpdateRsvpResponse,
+  type RsvpInput,
 } from "@workspace/api-zod";
 import { db, eventsTable, rsvpsTable } from "@workspace/db";
 import { requireAdmin } from "../lib/admin-auth";
@@ -37,7 +45,13 @@ const defaultEvent = {
   imageUrl: "/baby.jpg",
   featuredNote: "",
   theme: "rose",
+  cardStyle: "classic",
+  themeColor: "#d6848d",
+  themeAccent: "#c9a24a",
   belongTeamLabel: "소속 팀",
+  belongDeptLabel: "소속 부서",
+  belongDeptOptions: [] as { value: string; label: string }[],
+  tableCount: 20,
   messageLabel: "축하 메시지",
   messagePlaceholder: "따뜻한 한마디를 남겨주세요.",
 };
@@ -121,11 +135,13 @@ function toPublic(rsvp: Rsvp) {
     fatherName: rsvp.fatherName,
     motherName: rsvp.motherName,
     belongTeam: rsvp.belongTeam,
+    belongDept: rsvp.belongDept,
     phoneNumberMasked: digits.length >= 4 ? `***-***-${digits.slice(-4)}` : "",
     children: rsvp.children,
     adultCount: rsvp.adultCount,
     childCount: rsvp.childCount,
     totalMembers: rsvp.guestCount,
+    tableNumber: rsvp.tableNumber,
     message: rsvp.message,
     createdAt: rsvp.createdAt,
   };
@@ -135,6 +151,10 @@ function toPublic(rsvp: Rsvp) {
 function normalizeName(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, "");
 }
+
+// A digits-only term (spaces, dashes and parentheses allowed) is read as a phone number.
+const PHONE_TERM = /^[\d\s()+-]+$/;
+const PHONE_MIN_DIGITS = 4;
 
 const LOOKUP_WINDOW_MS = 60_000;
 const LOOKUP_LIMIT = 10;
@@ -154,27 +174,35 @@ router.post("/rsvps/lookup", async (req, res): Promise<void> => {
     return;
   }
   const parsed = LookupRsvpsBody.safeParse(req.body);
-  const name = parsed.success ? normalizeName(parsed.data.name) : "";
-  if (!name) {
-    res.status(400).json({ error: "Name is required" });
+  const term = parsed.success ? parsed.data.query.trim() : "";
+  if (!term) {
+    res.status(400).json({ error: "A name or phone number is required" });
+    return;
+  }
+
+  // The last few digits are enough to find a family, but fewer than four would list too many.
+  const isPhoneTerm = PHONE_TERM.test(term);
+  const digits = isPhoneTerm ? term.replace(/\D/g, "") : "";
+  if (isPhoneTerm && digits.length < PHONE_MIN_DIGITS) {
+    res.status(400).json({ error: `At least ${PHONE_MIN_DIGITS} phone digits are required` });
     return;
   }
 
   const normalized = (column: unknown) => sql`lower(regexp_replace(${column}, '\\s', '', 'g'))`;
-  const rsvps = await db
-    .select()
-    .from(rsvpsTable)
-    .where(
-      and(
-        eq(rsvpsTable.eventId, EVENT_ID),
-        sql`(${normalized(rsvpsTable.fatherName)} = ${name}
+  const name = normalizeName(term);
+  const match = digits
+    ? sql`regexp_replace(coalesce(${rsvpsTable.phoneNumber}, ''), '\\D', '', 'g') like ${"%" + digits}`
+    : sql`(${normalized(rsvpsTable.fatherName)} = ${name}
           or ${normalized(rsvpsTable.motherName)} = ${name}
           or exists (
             select 1 from jsonb_array_elements(${rsvpsTable.children}) as child
             where ${normalized(sql`child->>'name'`)} = ${name}
-          ))`,
-      ),
-    )
+          ))`;
+
+  const rsvps = await db
+    .select()
+    .from(rsvpsTable)
+    .where(and(eq(rsvpsTable.eventId, EVENT_ID), match))
     .orderBy(desc(rsvpsTable.createdAt))
     .limit(20);
 
@@ -198,6 +226,54 @@ router.get("/rsvps/confirmation/:token", async (req, res): Promise<void> => {
   res.json(GetRsvpConfirmationResponse.parse(toPublic(rsvp)));
 });
 
+// Shared by guest submissions and admin edits: trims the input, checks it, and derives the head counts.
+type RsvpValues = {
+  name: string;
+  fatherName: string;
+  motherName: string;
+  phoneNumber: string | null;
+  belongTeam: string | null;
+  belongDept: string | null;
+  children: RsvpChild[];
+  message: string | null;
+  adultCount: number;
+  childCount: number;
+  guestCount: number;
+};
+
+async function rsvpValues(data: RsvpInput): Promise<{ error: string } | { values: RsvpValues }> {
+  const fatherName = data.fatherName.trim();
+  const motherName = data.motherName.trim();
+  const children = data.children.map((child) => ({ name: child.name.trim(), age: child.age }));
+  if (!fatherName && !motherName) return { error: "At least one parent name is required" };
+  if (children.some((child) => !child.name)) return { error: "Every child needs a name" };
+
+  // When the admin has set choices, only those values are accepted for the department.
+  const event = await loadEvent();
+  const belongDept = data.belongDept?.trim() || null;
+  if (belongDept && event.belongDeptOptions.length > 0 && !event.belongDeptOptions.some((option) => option.value === belongDept)) {
+    return { error: "Unknown department choice" };
+  }
+
+  // Each named parent is one adult, so a single-parent family is counted correctly.
+  const adultCount = (fatherName ? 1 : 0) + (motherName ? 1 : 0);
+  return {
+    values: {
+      name: [fatherName, motherName].filter(Boolean).join(" · "),
+      fatherName,
+      motherName,
+      phoneNumber: data.phoneNumber?.trim() || null,
+      belongTeam: data.belongTeam?.trim() || null,
+      belongDept,
+      children,
+      message: data.message?.trim() || null,
+      adultCount,
+      childCount: children.length,
+      guestCount: adultCount + children.length,
+    },
+  };
+}
+
 router.post("/rsvps", async (req, res): Promise<void> => {
   const parsed = CreateRsvpBody.safeParse(req.body);
   if (!parsed.success) {
@@ -206,39 +282,86 @@ router.post("/rsvps", async (req, res): Promise<void> => {
     return;
   }
 
-  const fatherName = parsed.data.fatherName.trim();
-  const motherName = parsed.data.motherName.trim();
-  const children = parsed.data.children.map((child) => ({ name: child.name.trim(), age: child.age }));
-  if (!fatherName && !motherName) {
-    res.status(400).json({ error: "At least one parent name is required" });
-    return;
-  }
-  if (children.some((child) => !child.name)) {
-    res.status(400).json({ error: "Every child needs a name" });
+  const result = await rsvpValues(parsed.data);
+  if ("error" in result) {
+    res.status(400).json({ error: result.error });
     return;
   }
 
-  // Each named parent is one adult, so a single-parent family is counted correctly.
-  const adultCount = (fatherName ? 1 : 0) + (motherName ? 1 : 0);
   const [rsvp] = await db
     .insert(rsvpsTable)
-    .values({
-      eventId: EVENT_ID,
-      name: [fatherName, motherName].filter(Boolean).join(" · "),
-      fatherName,
-      motherName,
-      phoneNumber: parsed.data.phoneNumber?.trim() || null,
-      belongTeam: parsed.data.belongTeam?.trim() || null,
-      children,
-      message: parsed.data.message?.trim() || null,
-      attendance: "attending",
-      adultCount,
-      childCount: children.length,
-      guestCount: adultCount + children.length,
-    })
+    .values({ eventId: EVENT_ID, attendance: "attending", ...result.values })
     .returning();
 
   res.status(201).json(CreateRsvpResponse.parse(toPublic(rsvp!)));
+});
+
+router.put("/rsvps/:id", requireAdmin, async (req, res): Promise<void> => {
+  const params = UpdateRsvpParams.safeParse(req.params);
+  const parsed = UpdateRsvpBody.safeParse(req.body);
+  if (!params.success || !parsed.success) {
+    res.status(400).json({ error: params.success ? parsed.error!.message : params.error.message });
+    return;
+  }
+
+  const result = await rsvpValues(parsed.data);
+  if ("error" in result) {
+    res.status(400).json({ error: result.error });
+    return;
+  }
+
+  const [rsvp] = await db
+    .update(rsvpsTable)
+    .set(result.values)
+    .where(and(eq(rsvpsTable.eventId, EVENT_ID), eq(rsvpsTable.id, params.data.id)))
+    .returning();
+
+  if (!rsvp) {
+    res.status(404).json({ error: "RSVP not found" });
+    return;
+  }
+  res.json(UpdateRsvpResponse.parse(rsvp));
+});
+
+// Seating is admin-only, so it lives apart from the RSVP body the guests submit.
+router.put("/rsvps/:id/table", requireAdmin, async (req, res): Promise<void> => {
+  const params = AssignRsvpTableParams.safeParse(req.params);
+  const parsed = AssignRsvpTableBody.safeParse(req.body);
+  if (!params.success || !parsed.success) {
+    res.status(400).json({ error: params.success ? parsed.error!.message : params.error.message });
+    return;
+  }
+
+  const [rsvp] = await db
+    .update(rsvpsTable)
+    .set({ tableNumber: parsed.data.tableNumber })
+    .where(and(eq(rsvpsTable.eventId, EVENT_ID), eq(rsvpsTable.id, params.data.id)))
+    .returning();
+
+  if (!rsvp) {
+    res.status(404).json({ error: "RSVP not found" });
+    return;
+  }
+  res.json(AssignRsvpTableResponse.parse(rsvp));
+});
+
+router.delete("/rsvps/:id", requireAdmin, async (req, res): Promise<void> => {
+  const params = DeleteRsvpParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(404).json({ error: "RSVP not found" });
+    return;
+  }
+
+  const [deleted] = await db
+    .delete(rsvpsTable)
+    .where(and(eq(rsvpsTable.eventId, EVENT_ID), eq(rsvpsTable.id, params.data.id)))
+    .returning();
+
+  if (!deleted) {
+    res.status(404).json({ error: "RSVP not found" });
+    return;
+  }
+  res.status(204).end();
 });
 
 export default router;

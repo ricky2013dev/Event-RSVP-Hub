@@ -8,7 +8,7 @@
 import type { RsvpChild } from './rsvpChild';
 
 /**
- * What a family (or anyone with the lookup name) can see; the phone number is masked
+ * What a family (or anyone who can look them up) can see; the phone number is masked
  */
 export interface RsvpPublic {
   confirmToken: string;
@@ -17,10 +17,19 @@ export interface RsvpPublic {
   phoneNumberMasked: string;
   /** @nullable */
   belongTeam: string | null;
+  /** @nullable */
+  belongDept: string | null;
   children: RsvpChild[];
   adultCount: number;
   childCount: number;
   totalMembers: number;
+  /**
+     * Table the family is seated at; assigned by the admin only
+     * @minimum 1
+     * @maximum 50
+     * @nullable
+     */
+  tableNumber: number | null;
   /** @nullable */
   message: string | null;
   createdAt: Date;

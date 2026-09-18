@@ -30,7 +30,8 @@ import type {
   RsvpInput,
   RsvpLookupInput,
   RsvpPublic,
-  RsvpSummary
+  RsvpSummary,
+  RsvpTableInput
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -561,6 +562,261 @@ export const useCreateRsvp = <TError = ErrorType<Error>,
       return useMutation(getCreateRsvpMutationOptions(options));
     }
 
+export const getUpdateRsvpUrl = (id: number,) => {
+
+
+
+
+  return `/api/rsvps/${id}`
+}
+
+/**
+ * Replaces a family's RSVP details (admin only)
+ * @summary Update an RSVP
+ */
+export const updateRsvp = async (id: number,
+    rsvpInput: RsvpInput, options?: Parameters<typeof customFetch>[1]): Promise<Rsvp> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Rsvp>(getUpdateRsvpUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(rsvpInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateRsvpMutationKey = () => ['updateRsvp'] as const;
+
+export const getUpdateRsvpMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRsvp>>, TError,UpdateRsvpMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateRsvp>>, TError,UpdateRsvpMutationVariables, TContext> => {
+
+const mutationKey = getUpdateRsvpMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateRsvp>>, UpdateRsvpMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateRsvp(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateRsvpMutationResult = NonNullable<Awaited<ReturnType<typeof updateRsvp>>>
+    export type UpdateRsvpMutationBody = BodyType<RsvpInput>
+    export type UpdateRsvpMutationError = ErrorType<Error>
+    export type UpdateRsvpMutationVariables = {id: number;data: BodyType<RsvpInput>}
+
+    /**
+ * @summary Update an RSVP
+ */
+export const useUpdateRsvp = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRsvp>>, TError,UpdateRsvpMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateRsvp>>,
+        TError,
+        UpdateRsvpMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateRsvpMutationOptions(options));
+    }
+
+export const getDeleteRsvpUrl = (id: number,) => {
+
+
+
+
+  return `/api/rsvps/${id}`
+}
+
+/**
+ * Removes a family's RSVP (admin only)
+ * @summary Delete an RSVP
+ */
+export const deleteRsvp = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteRsvpUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteRsvpMutationKey = () => ['deleteRsvp'] as const;
+
+export const getDeleteRsvpMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRsvp>>, TError,DeleteRsvpMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteRsvp>>, TError,DeleteRsvpMutationVariables, TContext> => {
+
+const mutationKey = getDeleteRsvpMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteRsvp>>, DeleteRsvpMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteRsvp(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteRsvpMutationResult = NonNullable<Awaited<ReturnType<typeof deleteRsvp>>>
+
+    export type DeleteRsvpMutationError = ErrorType<Error>
+    export type DeleteRsvpMutationVariables = {id: number}
+
+    /**
+ * @summary Delete an RSVP
+ */
+export const useDeleteRsvp = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRsvp>>, TError,DeleteRsvpMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteRsvp>>,
+        TError,
+        DeleteRsvpMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteRsvpMutationOptions(options));
+    }
+
+export const getAssignRsvpTableUrl = (id: number,) => {
+
+
+
+
+  return `/api/rsvps/${id}/table`
+}
+
+/**
+ * Sets or clears the table a family is seated at (admin only)
+ * @summary Assign a table
+ */
+export const assignRsvpTable = async (id: number,
+    rsvpTableInput: RsvpTableInput, options?: Parameters<typeof customFetch>[1]): Promise<Rsvp> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Rsvp>(getAssignRsvpTableUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(rsvpTableInput)
+  }
+);}
+
+
+
+
+
+export const getAssignRsvpTableMutationKey = () => ['assignRsvpTable'] as const;
+
+export const getAssignRsvpTableMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignRsvpTable>>, TError,AssignRsvpTableMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof assignRsvpTable>>, TError,AssignRsvpTableMutationVariables, TContext> => {
+
+const mutationKey = getAssignRsvpTableMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignRsvpTable>>, AssignRsvpTableMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  assignRsvpTable(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AssignRsvpTableMutationResult = NonNullable<Awaited<ReturnType<typeof assignRsvpTable>>>
+    export type AssignRsvpTableMutationBody = BodyType<RsvpTableInput>
+    export type AssignRsvpTableMutationError = ErrorType<Error>
+    export type AssignRsvpTableMutationVariables = {id: number;data: BodyType<RsvpTableInput>}
+
+    /**
+ * @summary Assign a table
+ */
+export const useAssignRsvpTable = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignRsvpTable>>, TError,AssignRsvpTableMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof assignRsvpTable>>,
+        TError,
+        AssignRsvpTableMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAssignRsvpTableMutationOptions(options));
+    }
+
 export const getLookupRsvpsUrl = () => {
 
 
@@ -570,8 +826,8 @@ export const getLookupRsvpsUrl = () => {
 }
 
 /**
- * Matches a whole name (father, mother or child), ignoring case and spaces
- * @summary Find RSVPs by a family member's name
+ * Matches a whole name (father, mother or child), ignoring case and spaces, or the last 4 or more digits of the phone number
+ * @summary Find RSVPs by a family member's name or phone number
  */
 export const lookupRsvps = async (rsvpLookupInput: RsvpLookupInput, options?: Parameters<typeof customFetch>[1]): Promise<RsvpPublic[]> => {
 
@@ -637,7 +893,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type LookupRsvpsMutationVariables = {data: BodyType<RsvpLookupInput>}
 
     /**
- * @summary Find RSVPs by a family member's name
+ * @summary Find RSVPs by a family member's name or phone number
  */
 export const useLookupRsvps = <TError = ErrorType<Error>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof lookupRsvps>>, TError,LookupRsvpsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}

@@ -8,8 +8,10 @@
 
 export * from './adminLoginInput';
 export * from './adminSession';
+export * from './choiceOption';
 export * from './error';
 export * from './event';
+export * from './eventCardStyle';
 export * from './eventInput';
 export * from './eventTheme';
 export * from './healthStatus';
@@ -19,3 +21,4 @@ export * from './rsvpInput';
 export * from './rsvpLookupInput';
 export * from './rsvpPublic';
 export * from './rsvpSummary';
+export * from './rsvpTableInput';

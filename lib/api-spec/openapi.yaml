@@ -139,12 +139,130 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /rsvps/{id}:
+    put:
+      operationId: updateRsvp
+      tags: [event]
+      summary: Update an RSVP
+      description: Replaces a family's RSVP details (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RsvpInput"
+      responses:
+        "200":
+          description: Updated RSVP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rsvp"
+        "400":
+          description: Invalid RSVP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Not signed in as admin
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Unknown RSVP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteRsvp
+      tags: [event]
+      summary: Delete an RSVP
+      description: Removes a family's RSVP (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "401":
+          description: Not signed in as admin
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Unknown RSVP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /rsvps/{id}/table:
+    put:
+      operationId: assignRsvpTable
+      tags: [event]
+      summary: Assign a table
+      description: Sets or clears the table a family is seated at (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RsvpTableInput"
+      responses:
+        "200":
+          description: Updated RSVP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rsvp"
+        "400":
+          description: Invalid table number
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Not signed in as admin
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Unknown RSVP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /rsvps/lookup:
     post:
       operationId: lookupRsvps
       tags: [event]
-      summary: Find RSVPs by a family member's name
-      description: Matches a whole name (father, mother or child), ignoring case and spaces
+      summary: Find RSVPs by a family member's name or phone number
+      description: Matches a whole name (father, mother or child), ignoring case and spaces, or the last 4 or more digits of the phone number
       requestBody:
         required: true
         content:
@@ -161,7 +279,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/RsvpPublic"
         "400":
-          description: Invalid name
+          description: Invalid search term
           content:
             application/json:
               schema:
@@ -217,8 +335,12 @@ components:
   schemas:
     EventTheme:
       type: string
-      description: Color palette for the invitation
-      enum: [rose, sage, sky, lavender, butter, navy]
+      description: Color palette for the invitation; "custom" builds one from themeColor and themeAccent
+      enum: [rose, sage, sky, lavender, butter, navy, custom]
+    EventCardStyle:
+      type: string
+      description: Card shape and ornaments for the invitation, chosen by the kind of event
+      enum: [classic, dinner, birthday, party, performance, ceremony]
     AdminLoginInput:
       type: object
       properties:
@@ -276,10 +398,35 @@ components:
           type: string
         theme:
           $ref: "#/components/schemas/EventTheme"
+        cardStyle:
+          $ref: "#/components/schemas/EventCardStyle"
+        themeColor:
+          type: string
+          pattern: "^#[0-9a-fA-F]{6}$"
+          description: Main colour the "custom" theme is built from
+        themeAccent:
+          type: string
+          pattern: "^#[0-9a-fA-F]{6}$"
+          description: Frame and detail colour of the "custom" theme
         belongTeamLabel:
           type: string
           maxLength: 30
           description: Label for the team field on the RSVP form; empty hides the field
+        belongDeptLabel:
+          type: string
+          maxLength: 30
+          description: Label for the department field on the RSVP form; empty hides the field
+        belongDeptOptions:
+          type: array
+          maxItems: 20
+          description: Choices for the department field; empty turns it back into a free-text box
+          items:
+            $ref: "#/components/schemas/ChoiceOption"
+        tableCount:
+          type: integer
+          minimum: 1
+          maximum: 50
+          description: How many tables the seating board shows
         messageLabel:
           type: string
           maxLength: 30
@@ -303,7 +450,13 @@ components:
         - imageUrl
         - featuredNote
         - theme
+        - cardStyle
+        - themeColor
+        - themeAccent
         - belongTeamLabel
+        - belongDeptLabel
+        - belongDeptOptions
+        - tableCount
         - messageLabel
         - messagePlaceholder
     HealthStatus:
@@ -349,10 +502,35 @@ components:
           type: string
         theme:
           $ref: "#/components/schemas/EventTheme"
+        cardStyle:
+          $ref: "#/components/schemas/EventCardStyle"
+        themeColor:
+          type: string
+          pattern: "^#[0-9a-fA-F]{6}$"
+          description: Main colour the "custom" theme is built from
+        themeAccent:
+          type: string
+          pattern: "^#[0-9a-fA-F]{6}$"
+          description: Frame and detail colour of the "custom" theme
         belongTeamLabel:
           type: string
           maxLength: 30
           description: Label for the team field on the RSVP form; empty hides the field
+        belongDeptLabel:
+          type: string
+          maxLength: 30
+          description: Label for the department field on the RSVP form; empty hides the field
+        belongDeptOptions:
+          type: array
+          maxItems: 20
+          description: Choices for the department field; empty turns it back into a free-text box
+          items:
+            $ref: "#/components/schemas/ChoiceOption"
+        tableCount:
+          type: integer
+          minimum: 1
+          maximum: 50
+          description: How many tables the seating board shows
         messageLabel:
           type: string
           maxLength: 30
@@ -377,9 +555,39 @@ components:
         - imageUrl
         - featuredNote
         - theme
+        - cardStyle
+        - themeColor
+        - themeAccent
         - belongTeamLabel
+        - belongDeptLabel
+        - belongDeptOptions
+        - tableCount
         - messageLabel
         - messagePlaceholder
+    RsvpTableInput:
+      type: object
+      properties:
+        tableNumber:
+          type: ["integer", "null"]
+          minimum: 1
+          maximum: 50
+      required:
+        - tableNumber
+    ChoiceOption:
+      type: object
+      description: One selectable option; the value is stored on the RSVP, the label is what guests see
+      properties:
+        value:
+          type: string
+          minLength: 1
+          maxLength: 50
+        label:
+          type: string
+          minLength: 1
+          maxLength: 50
+      required:
+        - value
+        - label
     RsvpChild:
       type: object
       properties:
@@ -396,7 +604,7 @@ components:
         - age
     RsvpPublic:
       type: object
-      description: What a family (or anyone with the lookup name) can see; the phone number is masked
+      description: What a family (or anyone who can look them up) can see; the phone number is masked
       properties:
         confirmToken:
           type: string
@@ -408,6 +616,8 @@ components:
           type: string
         belongTeam:
           type: ["string", "null"]
+        belongDept:
+          type: ["string", "null"]
         children:
           type: array
           items:
@@ -418,6 +628,11 @@ components:
           type: integer
         totalMembers:
           type: integer
+        tableNumber:
+          type: ["integer", "null"]
+          minimum: 1
+          maximum: 50
+          description: Table the family is seated at; assigned by the admin only
         message:
           type: ["string", "null"]
         createdAt:
@@ -429,10 +644,12 @@ components:
         - motherName
         - phoneNumberMasked
         - belongTeam
+        - belongDept
         - children
         - adultCount
         - childCount
         - totalMembers
+        - tableNumber
         - message
         - createdAt
     Rsvp:
@@ -451,6 +668,8 @@ components:
           type: ["string", "null"]
         belongTeam:
           type: ["string", "null"]
+        belongDept:
+          type: ["string", "null"]
         email:
           type: ["string", "null"]
         children:
@@ -463,6 +682,11 @@ components:
           type: integer
         guestCount:
           type: integer
+        tableNumber:
+          type: ["integer", "null"]
+          minimum: 1
+          maximum: 50
+          description: Table the family is seated at; assigned by the admin only
         message:
           type: ["string", "null"]
         createdAt:
@@ -475,11 +699,13 @@ components:
         - motherName
         - phoneNumber
         - belongTeam
+        - belongDept
         - email
         - children
         - adultCount
         - childCount
         - guestCount
+        - tableNumber
         - message
         - createdAt
     RsvpInput:
@@ -497,6 +723,9 @@ components:
         belongTeam:
           type: ["string", "null"]
           maxLength: 50
+        belongDept:
+          type: ["string", "null"]
+          maxLength: 50
         children:
           type: array
           maxItems: 10
@@ -512,12 +741,13 @@ components:
     RsvpLookupInput:
       type: object
       properties:
-        name:
+        query:
           type: string
+          description: A family member's whole name, or the last 4 or more digits of the phone number
           minLength: 1
           maxLength: 50
       required:
-        - name
+        - query
     RsvpSummary:
       type: object
       properties:

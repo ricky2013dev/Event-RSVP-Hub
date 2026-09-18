@@ -8,8 +8,9 @@
 
 export interface RsvpLookupInput {
   /**
+     * A family member's whole name, or the last 4 or more digits of the phone number
      * @minLength 1
      * @maxLength 50
      */
-  name: string;
+  query: string;
 }

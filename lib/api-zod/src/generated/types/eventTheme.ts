@@ -7,7 +7,7 @@
  */
 
 /**
- * Color palette for the invitation
+ * Color palette for the invitation; "custom" builds one from themeColor and themeAccent
  */
 export type EventTheme = typeof EventTheme[keyof typeof EventTheme];
 
@@ -19,4 +19,5 @@ export const EventTheme = {
   lavender: 'lavender',
   butter: 'butter',
   navy: 'navy',
+  custom: 'custom',
 } as const;

@@ -7,6 +7,7 @@ import { AdminLoginForm } from '@/components/admin-login-form';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Corners, Flourish } from '@/components/ornaments';
 import { hasAdminSession } from '@/lib/admin-session';
+import { useCardStyle, useCurrentCardStyle } from '@/lib/card-styles';
 import { useDocumentTitle } from '@/lib/document-title';
 import { useTheme } from '@/lib/themes';
 import AdminPage from '@/pages/admin';
@@ -38,7 +39,9 @@ function Invitation() {
 
   const event = eventQuery.data;
   const summary = summaryQuery.data;
-  useTheme(event?.theme);
+  useTheme(event);
+  useCardStyle(event?.cardStyle);
+  const cardStyle = useCurrentCardStyle();
   useDocumentTitle(event && `${event.title} RSVP`);
 
   function openAdmin() {
@@ -80,7 +83,7 @@ function Invitation() {
         <Corners />
 
         <div className="photo-wrap">
-          <span className="sparkle s1">✦</span><span className="sparkle s2">✦</span><span className="sparkle s3">✦</span>
+          {cardStyle.sparkles.map((glyph, index) => <span className={`sparkle s${index + 1}`} key={index}>{glyph}</span>)}
           <div className="photo-ring">
             <img src={event.imageUrl} alt={event.title} data-testid="img-event" />
           </div>

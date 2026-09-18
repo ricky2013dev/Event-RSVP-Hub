@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'wouter';
-import { ArrowLeft, Check, ClipboardList, Home, ImageUp, LogOut } from 'lucide-react';
+import { ArrowLeft, Check, ClipboardList, Grid3x3, Home, ImageUp, LogOut, Plus, Trash2 } from 'lucide-react';
 import {
   ApiError,
   getGetEventQueryKey,
@@ -11,15 +11,24 @@ import {
   useUpdateEvent,
   type Event,
   type EventInput,
-  type EventTheme,
 } from '@workspace/api-client-react';
 import { AdminLoginForm } from '@/components/admin-login-form';
 import { AdminReservations } from '@/components/admin-reservations';
+import { AdminTables } from '@/components/admin-tables';
+import { Flourish } from '@/components/ornaments';
 import { clearAdminToken, hasAdminSession } from '@/lib/admin-session';
+import { CARD_STYLES, useCardStyle } from '@/lib/card-styles';
 import { useDocumentTitle } from '@/lib/document-title';
-import { THEMES, useTheme } from '@/lib/themes';
+import { customTheme, THEMES, useTheme } from '@/lib/themes';
 
-type TextField = Exclude<keyof EventInput, 'capacity' | 'theme'>;
+type TextField = Exclude<keyof EventInput, 'capacity' | 'theme' | 'cardStyle' | 'themeColor' | 'themeAccent' | 'belongDeptOptions' | 'tableCount'>;
+
+// What the editor previews live, before anything is saved.
+type LookPreview = Pick<EventInput, 'theme' | 'cardStyle' | 'themeColor' | 'themeAccent'>;
+
+const HEX = /^#[0-9a-fA-F]{6}$/;
+
+const MAX_DEPT_OPTIONS = 20;
 
 function toInput(event: Event): EventInput {
   const { id: _id, ...rest } = event;
@@ -52,7 +61,7 @@ function isUnauthorized(error: unknown) {
   return error instanceof ApiError && error.status === 401;
 }
 
-function EventEditor({ onSignedOut, onPreviewTheme }: { onSignedOut: () => void; onPreviewTheme: (theme: EventTheme) => void }) {
+function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPreview: (preview: LookPreview) => void }) {
   const queryClient = useQueryClient();
   const eventQuery = useGetEvent({ query: { queryKey: getGetEventQueryKey() } });
   const updateEvent = useUpdateEvent();
@@ -64,13 +73,30 @@ function EventEditor({ onSignedOut, onPreviewTheme }: { onSignedOut: () => void;
   }, [eventQuery.data, form]);
 
   useEffect(() => {
-    if (form) onPreviewTheme(form.theme);
-  }, [form?.theme, onPreviewTheme]);
+    if (form) onPreview({ theme: form.theme, cardStyle: form.cardStyle, themeColor: form.themeColor, themeAccent: form.themeAccent });
+  }, [form?.theme, form?.cardStyle, form?.themeColor, form?.themeAccent, onPreview]);
 
   if (!form) return <p className="admin-muted">불러오는 중…</p>;
 
+  const custom = customTheme(form.themeColor, form.themeAccent);
+
   function set<Key extends keyof EventInput>(key: Key, value: EventInput[Key]) {
     setForm((current) => (current ? { ...current, [key]: value } : current));
+    setStatus(null);
+  }
+
+  // Typing only the shown name is the common case, so the stored value follows it until it is edited.
+  function setOption(index: number, patch: { value?: string; label?: string }) {
+    setForm((current) => {
+      if (!current) return current;
+      const options = current.belongDeptOptions.map((option, at) => {
+        if (at !== index) return option;
+        const next = { ...option, ...patch };
+        if (patch.label !== undefined && option.value === option.label) next.value = patch.label;
+        return next;
+      });
+      return { ...current, belongDeptOptions: options };
+    });
     setStatus(null);
   }
 
@@ -81,6 +107,18 @@ function EventEditor({ onSignedOut, onPreviewTheme }: { onSignedOut: () => void;
         {options.multiline
           ? <textarea value={form![key]} onChange={(e) => set(key, e.target.value)} data-testid={`input-event-${key}`} />
           : <input type={options.type ?? 'text'} value={form![key]} onChange={(e) => set(key, e.target.value)} data-testid={`input-event-${key}`} />}
+      </label>
+    );
+  }
+
+  function color(key: 'themeColor' | 'themeAccent', label: string, hint: string) {
+    return (
+      <label className="field">
+        <span>{label} <em>· {hint}</em></span>
+        <span className="color-well">
+          <input type="color" value={form![key]} onChange={(e) => set(key, e.target.value)} data-testid={`input-event-${key}`} />
+          <code>{form![key].toUpperCase()}</code>
+        </span>
       </label>
     );
   }
@@ -100,9 +138,27 @@ function EventEditor({ onSignedOut, onPreviewTheme }: { onSignedOut: () => void;
     formEvent.preventDefault();
     if (!form!.title.trim()) return setStatus({ kind: 'error', text: '제목을 입력해 주세요.' });
     if (!form!.date || !form!.startTime) return setStatus({ kind: 'error', text: '날짜와 시작 시간을 입력해 주세요.' });
+    if (form!.theme === 'custom' && !(HEX.test(form!.themeColor) && HEX.test(form!.themeAccent))) {
+      return setStatus({ kind: 'error', text: '직접 고른 색상은 #RRGGBB 형식이어야 해요.' });
+    }
+
+    // Blank rows are dropped; the rest must be complete and unique, or guests would see duplicates.
+    const options = form!.belongDeptOptions
+      .map((option) => ({ value: option.value.trim() || option.label.trim(), label: option.label.trim() || option.value.trim() }))
+      .filter((option) => option.value || option.label);
+    if (new Set(options.map((option) => option.value)).size !== options.length) {
+      return setStatus({ kind: 'error', text: '소속 부서 선택지의 저장 값이 중복됐어요.' });
+    }
 
     updateEvent.mutate(
-      { data: { ...form!, capacity: Math.max(0, Math.round(form!.capacity || 0)) } },
+      {
+        data: {
+          ...form!,
+          belongDeptOptions: options,
+          capacity: Math.max(0, Math.round(form!.capacity || 0)),
+          tableCount: Math.min(50, Math.max(1, Math.round(form!.tableCount || 1))),
+        },
+      },
       {
         onSuccess: (saved) => {
           queryClient.setQueryData(getGetEventQueryKey(), saved);
@@ -143,6 +199,55 @@ function EventEditor({ onSignedOut, onPreviewTheme }: { onSignedOut: () => void;
                 {form.theme === theme.id && <span className="theme-check"><Check size={12} /></span>}
               </button>
             ))}
+            <button
+              type="button"
+              role="radio"
+              aria-checked={form.theme === 'custom'}
+              className={`theme-option ${form.theme === 'custom' ? 'selected' : ''}`}
+              onClick={() => set('theme', 'custom')}
+              data-testid="button-theme-custom"
+            >
+              <span className="theme-swatch" style={{ background: custom.colors.bg, borderColor: custom.colors.gold }}>
+                <span className="theme-dot" style={{ background: custom.colors.card, borderColor: custom.colors.gold }} />
+                <span className="theme-bar" style={{ background: custom.colors.rose }} />
+              </span>
+              <span className="theme-name">직접 고르기</span>
+              {form.theme === 'custom' && <span className="theme-check"><Check size={12} /></span>}
+            </button>
+          </div>
+          {form.theme === 'custom' && (
+            <div className="admin-subsection">
+              <h3>색상 고르기 <span className="admin-muted">배경과 글자색은 고른 색에서 자동으로 만들어져요</span></h3>
+              <div className="admin-row">
+                {color('themeColor', '주 색상', '버튼과 강조')}
+                {color('themeAccent', '테두리 색상', '금테와 아이콘')}
+              </div>
+            </div>
+          )}
+        </section>
+
+        <section className="admin-section">
+          <h2>카드 스타일 <span className="admin-muted">행사 종류에 맞춰 카드 모양과 장식이 바뀌어요</span></h2>
+          <div className="style-grid" role="radiogroup" aria-label="카드 스타일">
+            {CARD_STYLES.map((style) => (
+              <button
+                key={style.id}
+                type="button"
+                role="radio"
+                aria-checked={form.cardStyle === style.id}
+                className={`theme-option ${form.cardStyle === style.id ? 'selected' : ''}`}
+                onClick={() => set('cardStyle', style.id)}
+                data-testid={`button-card-style-${style.id}`}
+              >
+                <span className="style-mini" data-style={style.id}>
+                  <span className="style-mini-photo" />
+                  <Flourish variant={style.flourish} />
+                </span>
+                <span className="theme-name">{style.name}</span>
+                <span className="style-hint">{style.hint}</span>
+                {form.cardStyle === style.id && <span className="theme-check"><Check size={12} /></span>}
+              </button>
+            ))}
           </div>
         </section>
 
@@ -156,7 +261,30 @@ function EventEditor({ onSignedOut, onPreviewTheme }: { onSignedOut: () => void;
 
         <section className="admin-section">
           <h2>RSVP 양식 <span className="admin-muted">비워두면 그 항목은 양식에서 숨겨져요</span></h2>
-          {text('belongTeamLabel', '소속 항목 이름', { hint: '예: 소속 팀, 목장, 반' })}
+          <div className="admin-row">
+            {text('belongDeptLabel', '소속 부서 항목 이름', { hint: '예: 캠퍼스(캐롤톤/노스)' })}
+            {text('belongTeamLabel', '소속 항목 이름', { hint: '예: 소속 팀, 목장, 반' })}
+          </div>
+
+          <div className="admin-subsection">
+            <h3>소속 부서 선택지 <span className="admin-muted">비워두면 직접 입력하는 칸이 돼요 · 저장 값과 보이는 이름을 따로 정할 수 있어요</span></h3>
+            {form.belongDeptOptions.map((option, index) => (
+              <div className="option-row" key={index}>
+                <label className="field">
+                  <span>저장 값</span>
+                  <input value={option.value} maxLength={50} onChange={(e) => setOption(index, { value: e.target.value })} data-testid={`input-dept-option-value-${index}`} />
+                </label>
+                <label className="field">
+                  <span>보이는 이름</span>
+                  <input value={option.label} maxLength={50} onChange={(e) => setOption(index, { label: e.target.value })} data-testid={`input-dept-option-label-${index}`} />
+                </label>
+                <button type="button" className="remove" onClick={() => set('belongDeptOptions', form.belongDeptOptions.filter((_, at) => at !== index))} data-testid={`button-remove-dept-option-${index}`}><Trash2 size={14} /> 삭제</button>
+              </div>
+            ))}
+            {form.belongDeptOptions.length < MAX_DEPT_OPTIONS && (
+              <button type="button" className="btn btn-dashed" onClick={() => set('belongDeptOptions', [...form.belongDeptOptions, { value: '', label: '' }])} data-testid="button-add-dept-option"><Plus size={16} /> 선택지 추가</button>
+            )}
+          </div>
           {text('messageLabel', '메시지 항목 이름', { hint: '예: 축하 메시지' })}
           {text('messagePlaceholder', '메시지 안내 문구', { hint: '입력칸 안에 흐리게 보이는 글' })}
         </section>
@@ -199,10 +327,16 @@ function EventEditor({ onSignedOut, onPreviewTheme }: { onSignedOut: () => void;
         <section className="admin-section">
           <h2>기타</h2>
           {text('hostName', '주최')}
-          <label className="field">
-            <span>최대 인원</span>
-            <input type="number" min={0} inputMode="numeric" value={form.capacity} onChange={(e) => set('capacity', Number(e.target.value))} data-testid="input-event-capacity" />
-          </label>
+          <div className="admin-row">
+            <label className="field">
+              <span>최대 인원</span>
+              <input type="number" min={0} inputMode="numeric" value={form.capacity} onChange={(e) => set('capacity', Number(e.target.value))} data-testid="input-event-capacity" />
+            </label>
+            <label className="field">
+              <span>테이블 수 <em>· 1~50</em></span>
+              <input type="number" min={1} max={50} inputMode="numeric" value={form.tableCount} onChange={(e) => set('tableCount', Number(e.target.value))} data-testid="input-event-tableCount" />
+            </label>
+          </div>
         </section>
 
         {status && <p className={status.kind === 'ok' ? 'notice' : 'error'} role="status" data-testid="status-admin-save">{status.kind === 'ok' && <Check size={16} />} {status.text}</p>}
@@ -213,33 +347,51 @@ function EventEditor({ onSignedOut, onPreviewTheme }: { onSignedOut: () => void;
   );
 }
 
-type AdminTab = 'reservations' | 'settings';
+type AdminTab = 'reservations' | 'tables' | 'settings';
 
 function initialTab(): AdminTab {
-  return new URLSearchParams(window.location.search).get('tab') === 'settings' ? 'settings' : 'reservations';
+  const tab = new URLSearchParams(window.location.search).get('tab');
+  return tab === 'settings' || tab === 'tables' ? tab : 'reservations';
 }
 
 export default function AdminPage() {
   const [signedIn, setSignedIn] = useState(hasAdminSession);
-  const [previewTheme, setPreviewTheme] = useState<EventTheme | null>(null);
+  const [preview, setPreview] = useState<LookPreview | null>(null);
   const [tab, setTab] = useState<AdminTab>(initialTab);
   const queryClient = useQueryClient();
   const eventQuery = useGetEvent({ query: { queryKey: getGetEventQueryKey() } });
-  useTheme(previewTheme ?? eventQuery.data?.theme);
+  const updateEvent = useUpdateEvent();
+  useTheme(preview ?? eventQuery.data);
+  useCardStyle(preview?.cardStyle ?? eventQuery.data?.cardStyle);
   useDocumentTitle(eventQuery.data && `RSVP 관리자 · ${eventQuery.data.title}`);
 
   function selectTab(next: AdminTab) {
     setTab(next);
-    // Leaving the editor drops any unsaved theme preview.
-    if (next === 'reservations') setPreviewTheme(null);
+    // Leaving the editor drops any unsaved look preview.
+    if (next !== 'settings') setPreview(null);
     const url = new URL(window.location.href);
     url.searchParams.set('tab', next);
     window.history.replaceState(null, '', url);
   }
 
+  // The seating board adds tables in tens; everything else about the event stays as it is.
+  function changeTableCount(next: number) {
+    const event = eventQuery.data;
+    if (!event) return;
+    updateEvent.mutate(
+      { data: { ...toInput(event), tableCount: next } },
+      {
+        onSuccess: (saved) => queryClient.setQueryData(getGetEventQueryKey(), saved),
+        onError: (error) => {
+          if (isUnauthorized(error)) signOut();
+        },
+      },
+    );
+  }
+
   const signOut = useCallback(() => {
     clearAdminToken();
-    setPreviewTheme(null);
+    setPreview(null);
     queryClient.removeQueries({ queryKey: getListRsvpsQueryKey() });
     setSignedIn(false);
   }, [queryClient]);
@@ -260,6 +412,7 @@ export default function AdminPage() {
   const tabs = (
     <div className="tabs" role="tablist">
       <button type="button" role="tab" aria-selected={tab === 'reservations'} className={tab === 'reservations' ? 'on' : ''} onClick={() => selectTab('reservations')} data-testid="tab-reservations"><ClipboardList size={17} /> 예약 현황</button>
+      <button type="button" role="tab" aria-selected={tab === 'tables'} className={tab === 'tables' ? 'on' : ''} onClick={() => selectTab('tables')} data-testid="tab-tables"><Grid3x3 size={17} /> 테이블 배정</button>
       <button type="button" role="tab" aria-selected={tab === 'settings'} className={tab === 'settings' ? 'on' : ''} onClick={() => selectTab('settings')} data-testid="tab-settings"><ImageUp size={17} /> 초대장 설정</button>
     </div>
   );
@@ -284,13 +437,26 @@ export default function AdminPage() {
             onSignedOut={signOut}
             eventTitle={eventQuery.data?.title ?? 'RSVP'}
             teamLabel={eventQuery.data?.belongTeamLabel.trim() || '소속'}
+            deptLabel={eventQuery.data?.belongDeptLabel.trim() || '소속 부서'}
+            deptOptions={eventQuery.data?.belongDeptOptions ?? []}
+            tableCount={eventQuery.data?.tableCount ?? 20}
             messageLabel={eventQuery.data?.messageLabel.trim() || '메시지'}
+          />
+        ) : tab === 'tables' ? (
+          <AdminTables
+            tabs={tabs}
+            onSignedOut={signOut}
+            teamLabel={eventQuery.data?.belongTeamLabel.trim() || '소속'}
+            eventTitle={eventQuery.data?.title ?? 'RSVP'}
+            deptOptions={eventQuery.data?.belongDeptOptions ?? []}
+            tableCount={eventQuery.data?.tableCount ?? 20}
+            onChangeTableCount={changeTableCount}
           />
         ) : (
           <>
             <div className="tabs-row">{tabs}</div>
             <article className="card admin-card">
-              <EventEditor onSignedOut={signOut} onPreviewTheme={setPreviewTheme} />
+              <EventEditor onSignedOut={signOut} onPreview={setPreview} />
             </article>
           </>
         )}

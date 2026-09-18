@@ -15,6 +15,8 @@ export const rsvpsTable = pgTable("rsvps", {
   phoneNumber: text("phone_number"),
   // Team/group the family belongs to; the label is set per event (events.belong_team_label).
   belongTeam: text("belong_team"),
+  // Department the family belongs to; the label is set per event (events.belong_dept_label).
+  belongDept: text("belong_dept"),
   children: jsonb("children").$type<RsvpChild[]>().notNull().default([]),
   // Legacy columns from the email-based form; kept so older rows still load.
   email: text("email"),
@@ -25,6 +27,8 @@ export const rsvpsTable = pgTable("rsvps", {
   mealPreference: text("meal_preference").notNull().default("noPreference"),
   dietaryNotes: text("dietary_notes"),
   message: text("message"),
+  // Seating assignment, set by the admin only; guests never submit it.
+  tableNumber: integer("table_number"),
   // Private link token so a family can re-open their confirmation later.
   confirmToken: text("confirm_token")
     .notNull()

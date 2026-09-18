@@ -6,7 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 /**
- * Color palette for the invitation
+ * Color palette for the invitation; "custom" builds one from themeColor and themeAccent
  */
 export type EventTheme = typeof EventTheme[keyof typeof EventTheme];
 
@@ -18,6 +18,22 @@ export const EventTheme = {
   lavender: 'lavender',
   butter: 'butter',
   navy: 'navy',
+  custom: 'custom',
+} as const;
+
+/**
+ * Card shape and ornaments for the invitation, chosen by the kind of event
+ */
+export type EventCardStyle = typeof EventCardStyle[keyof typeof EventCardStyle];
+
+
+export const EventCardStyle = {
+  classic: 'classic',
+  dinner: 'dinner',
+  birthday: 'birthday',
+  party: 'party',
+  performance: 'performance',
+  ceremony: 'ceremony',
 } as const;
 
 export interface AdminLoginInput {
@@ -27,6 +43,22 @@ export interface AdminLoginInput {
 export interface AdminSession {
   token: string;
   expiresAt: string;
+}
+
+/**
+ * One selectable option; the value is stored on the RSVP, the label is what guests see
+ */
+export interface ChoiceOption {
+  /**
+     * @minLength 1
+     * @maxLength 50
+     */
+  value: string;
+  /**
+     * @minLength 1
+     * @maxLength 50
+     */
+  label: string;
 }
 
 export interface EventInput {
@@ -52,11 +84,38 @@ export interface EventInput {
   imageUrl: string;
   featuredNote: string;
   theme: EventTheme;
+  cardStyle: EventCardStyle;
+  /**
+     * Main colour the "custom" theme is built from
+     * @pattern ^#[0-9a-fA-F]{6}$
+     */
+  themeColor: string;
+  /**
+     * Frame and detail colour of the "custom" theme
+     * @pattern ^#[0-9a-fA-F]{6}$
+     */
+  themeAccent: string;
   /**
      * Label for the team field on the RSVP form; empty hides the field
      * @maxLength 30
      */
   belongTeamLabel: string;
+  /**
+     * Label for the department field on the RSVP form; empty hides the field
+     * @maxLength 30
+     */
+  belongDeptLabel: string;
+  /**
+     * Choices for the department field; empty turns it back into a free-text box
+     * @maxItems 20
+     */
+  belongDeptOptions: ChoiceOption[];
+  /**
+     * How many tables the seating board shows
+     * @minimum 1
+     * @maximum 50
+     */
+  tableCount: number;
   /**
      * Heading for the RSVP form's message box; empty hides the box
      * @maxLength 30
@@ -87,11 +146,38 @@ export interface Event {
   imageUrl: string;
   featuredNote: string;
   theme: EventTheme;
+  cardStyle: EventCardStyle;
+  /**
+     * Main colour the "custom" theme is built from
+     * @pattern ^#[0-9a-fA-F]{6}$
+     */
+  themeColor: string;
+  /**
+     * Frame and detail colour of the "custom" theme
+     * @pattern ^#[0-9a-fA-F]{6}$
+     */
+  themeAccent: string;
   /**
      * Label for the team field on the RSVP form; empty hides the field
      * @maxLength 30
      */
   belongTeamLabel: string;
+  /**
+     * Label for the department field on the RSVP form; empty hides the field
+     * @maxLength 30
+     */
+  belongDeptLabel: string;
+  /**
+     * Choices for the department field; empty turns it back into a free-text box
+     * @maxItems 20
+     */
+  belongDeptOptions: ChoiceOption[];
+  /**
+     * How many tables the seating board shows
+     * @minimum 1
+     * @maximum 50
+     */
+  tableCount: number;
   /**
      * Heading for the RSVP form's message box; empty hides the box
      * @maxLength 30
@@ -99,6 +185,15 @@ export interface Event {
   messageLabel: string;
   /** @maxLength 100 */
   messagePlaceholder: string;
+}
+
+export interface RsvpTableInput {
+  /**
+     * @minimum 1
+     * @maximum 50
+     * @nullable
+     */
+  tableNumber: number | null;
 }
 
 export interface RsvpChild {
@@ -115,7 +210,7 @@ export interface RsvpChild {
 }
 
 /**
- * What a family (or anyone with the lookup name) can see; the phone number is masked
+ * What a family (or anyone who can look them up) can see; the phone number is masked
  */
 export interface RsvpPublic {
   confirmToken: string;
@@ -124,10 +219,19 @@ export interface RsvpPublic {
   phoneNumberMasked: string;
   /** @nullable */
   belongTeam: string | null;
+  /** @nullable */
+  belongDept: string | null;
   children: RsvpChild[];
   adultCount: number;
   childCount: number;
   totalMembers: number;
+  /**
+     * Table the family is seated at; assigned by the admin only
+     * @minimum 1
+     * @maximum 50
+     * @nullable
+     */
+  tableNumber: number | null;
   /** @nullable */
   message: string | null;
   createdAt: string;
@@ -146,11 +250,20 @@ export interface Rsvp {
   /** @nullable */
   belongTeam: string | null;
   /** @nullable */
+  belongDept: string | null;
+  /** @nullable */
   email: string | null;
   children: RsvpChild[];
   adultCount: number;
   childCount: number;
   guestCount: number;
+  /**
+     * Table the family is seated at; assigned by the admin only
+     * @minimum 1
+     * @maximum 50
+     * @nullable
+     */
+  tableNumber: number | null;
   /** @nullable */
   message: string | null;
   createdAt: string;
@@ -171,6 +284,11 @@ export interface RsvpInput {
      * @nullable
      */
   belongTeam?: string | null;
+  /**
+     * @maxLength 50
+     * @nullable
+     */
+  belongDept?: string | null;
   /** @maxItems 10 */
   children: RsvpChild[];
   /**
@@ -182,10 +300,11 @@ export interface RsvpInput {
 
 export interface RsvpLookupInput {
   /**
+     * A family member's whole name, or the last 4 or more digits of the phone number
      * @minLength 1
      * @maxLength 50
      */
-  name: string;
+  query: string;
 }
 
 export interface RsvpSummary {

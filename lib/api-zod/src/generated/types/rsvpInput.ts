@@ -22,6 +22,11 @@ export interface RsvpInput {
      * @nullable
      */
   belongTeam?: string | null;
+  /**
+     * @maxLength 50
+     * @nullable
+     */
+  belongDept?: string | null;
   /** @maxItems 10 */
   children: RsvpChild[];
   /**

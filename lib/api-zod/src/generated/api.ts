@@ -21,7 +21,19 @@ export const HealthCheckResponse = zod.object({
  * Returns the event currently accepting RSVPs
  * @summary Get event details
  */
+export const getEventResponseThemeColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getEventResponseThemeAccentRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getEventResponseBelongTeamLabelMax = 30;
+
+export const getEventResponseBelongDeptLabelMax = 30;
+
+export const getEventResponseBelongDeptOptionsItemValueMax = 50;
+
+export const getEventResponseBelongDeptOptionsItemLabelMax = 50;
+
+export const getEventResponseBelongDeptOptionsMax = 20;
+
+export const getEventResponseTableCountMax = 50;
 
 export const getEventResponseMessageLabelMax = 30;
 
@@ -45,8 +57,17 @@ export const GetEventResponse = zod.object({
   "capacity": zod.number().int(),
   "imageUrl": zod.string(),
   "featuredNote": zod.string(),
-  "theme": zod.enum(['rose', 'sage', 'sky', 'lavender', 'butter', 'navy']).describe('Color palette for the invitation'),
+  "theme": zod.enum(['rose', 'sage', 'sky', 'lavender', 'butter', 'navy', 'custom']).describe('Color palette for the invitation; "custom" builds one from themeColor and themeAccent'),
+  "cardStyle": zod.enum(['classic', 'dinner', 'birthday', 'party', 'performance', 'ceremony']).describe('Card shape and ornaments for the invitation, chosen by the kind of event'),
+  "themeColor": zod.string().regex(getEventResponseThemeColorRegExp).describe('Main colour the "custom" theme is built from'),
+  "themeAccent": zod.string().regex(getEventResponseThemeAccentRegExp).describe('Frame and detail colour of the "custom" theme'),
   "belongTeamLabel": zod.string().max(getEventResponseBelongTeamLabelMax).describe('Label for the team field on the RSVP form; empty hides the field'),
+  "belongDeptLabel": zod.string().max(getEventResponseBelongDeptLabelMax).describe('Label for the department field on the RSVP form; empty hides the field'),
+  "belongDeptOptions": zod.array(zod.object({
+  "value": zod.string().min(1).max(getEventResponseBelongDeptOptionsItemValueMax),
+  "label": zod.string().min(1).max(getEventResponseBelongDeptOptionsItemLabelMax)
+}).describe('One selectable option; the value is stored on the RSVP, the label is what guests see')).max(getEventResponseBelongDeptOptionsMax).describe('Choices for the department field; empty turns it back into a free-text box'),
+  "tableCount": zod.number().int().min(1).max(getEventResponseTableCountMax).describe('How many tables the seating board shows'),
   "messageLabel": zod.string().max(getEventResponseMessageLabelMax).describe('Heading for the RSVP form\'s message box; empty hides the box'),
   "messagePlaceholder": zod.string().max(getEventResponseMessagePlaceholderMax)
 })
@@ -61,7 +82,19 @@ export const updateEventBodyStartTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0
 export const updateEventBodyEndTimeRegExp = new RegExp('^(([01][0-9]|2[0-3]):[0-5][0-9])?$');
 export const updateEventBodyCapacityMin = 0;
 
+export const updateEventBodyThemeColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const updateEventBodyThemeAccentRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const updateEventBodyBelongTeamLabelMax = 30;
+
+export const updateEventBodyBelongDeptLabelMax = 30;
+
+export const updateEventBodyBelongDeptOptionsItemValueMax = 50;
+
+export const updateEventBodyBelongDeptOptionsItemLabelMax = 50;
+
+export const updateEventBodyBelongDeptOptionsMax = 20;
+
+export const updateEventBodyTableCountMax = 50;
 
 export const updateEventBodyMessageLabelMax = 30;
 
@@ -84,13 +117,34 @@ export const UpdateEventBody = zod.object({
   "capacity": zod.number().int().min(updateEventBodyCapacityMin),
   "imageUrl": zod.string(),
   "featuredNote": zod.string(),
-  "theme": zod.enum(['rose', 'sage', 'sky', 'lavender', 'butter', 'navy']).describe('Color palette for the invitation'),
+  "theme": zod.enum(['rose', 'sage', 'sky', 'lavender', 'butter', 'navy', 'custom']).describe('Color palette for the invitation; "custom" builds one from themeColor and themeAccent'),
+  "cardStyle": zod.enum(['classic', 'dinner', 'birthday', 'party', 'performance', 'ceremony']).describe('Card shape and ornaments for the invitation, chosen by the kind of event'),
+  "themeColor": zod.string().regex(updateEventBodyThemeColorRegExp).describe('Main colour the "custom" theme is built from'),
+  "themeAccent": zod.string().regex(updateEventBodyThemeAccentRegExp).describe('Frame and detail colour of the "custom" theme'),
   "belongTeamLabel": zod.string().max(updateEventBodyBelongTeamLabelMax).describe('Label for the team field on the RSVP form; empty hides the field'),
+  "belongDeptLabel": zod.string().max(updateEventBodyBelongDeptLabelMax).describe('Label for the department field on the RSVP form; empty hides the field'),
+  "belongDeptOptions": zod.array(zod.object({
+  "value": zod.string().min(1).max(updateEventBodyBelongDeptOptionsItemValueMax),
+  "label": zod.string().min(1).max(updateEventBodyBelongDeptOptionsItemLabelMax)
+}).describe('One selectable option; the value is stored on the RSVP, the label is what guests see')).max(updateEventBodyBelongDeptOptionsMax).describe('Choices for the department field; empty turns it back into a free-text box'),
+  "tableCount": zod.number().int().min(1).max(updateEventBodyTableCountMax).describe('How many tables the seating board shows'),
   "messageLabel": zod.string().max(updateEventBodyMessageLabelMax).describe('Heading for the RSVP form\'s message box; empty hides the box'),
   "messagePlaceholder": zod.string().max(updateEventBodyMessagePlaceholderMax)
 })
 
+export const updateEventResponseThemeColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const updateEventResponseThemeAccentRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const updateEventResponseBelongTeamLabelMax = 30;
+
+export const updateEventResponseBelongDeptLabelMax = 30;
+
+export const updateEventResponseBelongDeptOptionsItemValueMax = 50;
+
+export const updateEventResponseBelongDeptOptionsItemLabelMax = 50;
+
+export const updateEventResponseBelongDeptOptionsMax = 20;
+
+export const updateEventResponseTableCountMax = 50;
 
 export const updateEventResponseMessageLabelMax = 30;
 
@@ -114,8 +168,17 @@ export const UpdateEventResponse = zod.object({
   "capacity": zod.number().int(),
   "imageUrl": zod.string(),
   "featuredNote": zod.string(),
-  "theme": zod.enum(['rose', 'sage', 'sky', 'lavender', 'butter', 'navy']).describe('Color palette for the invitation'),
+  "theme": zod.enum(['rose', 'sage', 'sky', 'lavender', 'butter', 'navy', 'custom']).describe('Color palette for the invitation; "custom" builds one from themeColor and themeAccent'),
+  "cardStyle": zod.enum(['classic', 'dinner', 'birthday', 'party', 'performance', 'ceremony']).describe('Card shape and ornaments for the invitation, chosen by the kind of event'),
+  "themeColor": zod.string().regex(updateEventResponseThemeColorRegExp).describe('Main colour the "custom" theme is built from'),
+  "themeAccent": zod.string().regex(updateEventResponseThemeAccentRegExp).describe('Frame and detail colour of the "custom" theme'),
   "belongTeamLabel": zod.string().max(updateEventResponseBelongTeamLabelMax).describe('Label for the team field on the RSVP form; empty hides the field'),
+  "belongDeptLabel": zod.string().max(updateEventResponseBelongDeptLabelMax).describe('Label for the department field on the RSVP form; empty hides the field'),
+  "belongDeptOptions": zod.array(zod.object({
+  "value": zod.string().min(1).max(updateEventResponseBelongDeptOptionsItemValueMax),
+  "label": zod.string().min(1).max(updateEventResponseBelongDeptOptionsItemLabelMax)
+}).describe('One selectable option; the value is stored on the RSVP, the label is what guests see')).max(updateEventResponseBelongDeptOptionsMax).describe('Choices for the department field; empty turns it back into a free-text box'),
+  "tableCount": zod.number().int().min(1).max(updateEventResponseTableCountMax).describe('How many tables the seating board shows'),
   "messageLabel": zod.string().max(updateEventResponseMessageLabelMax).describe('Heading for the RSVP form\'s message box; empty hides the box'),
   "messagePlaceholder": zod.string().max(updateEventResponseMessagePlaceholderMax)
 })
@@ -144,6 +207,8 @@ export const listRsvpsResponseChildrenItemNameMax = 50;
 export const listRsvpsResponseChildrenItemAgeMin = 0;
 export const listRsvpsResponseChildrenItemAgeMax = 30;
 
+export const listRsvpsResponseTableNumberMax = 50;
+
 
 
 export const ListRsvpsResponseItem = zod.object({
@@ -153,6 +218,7 @@ export const ListRsvpsResponseItem = zod.object({
   "motherName": zod.string(),
   "phoneNumber": zod.string().nullable(),
   "belongTeam": zod.string().nullable(),
+  "belongDept": zod.string().nullable(),
   "email": zod.string().nullable(),
   "children": zod.array(zod.object({
   "name": zod.string().min(1).max(listRsvpsResponseChildrenItemNameMax),
@@ -161,6 +227,7 @@ export const ListRsvpsResponseItem = zod.object({
   "adultCount": zod.number().int(),
   "childCount": zod.number().int(),
   "guestCount": zod.number().int(),
+  "tableNumber": zod.number().int().min(1).max(listRsvpsResponseTableNumberMax).nullable().describe('Table the family is seated at; assigned by the admin only'),
   "message": zod.string().nullable(),
   "createdAt": zod.coerce.date()
 }).describe('Full RSVP record, admin only')
@@ -179,6 +246,8 @@ export const createRsvpBodyPhoneNumberMax = 30;
 
 export const createRsvpBodyBelongTeamMax = 50;
 
+export const createRsvpBodyBelongDeptMax = 50;
+
 export const createRsvpBodyChildrenItemNameMax = 50;
 
 export const createRsvpBodyChildrenItemAgeMin = 0;
@@ -195,6 +264,7 @@ export const CreateRsvpBody = zod.object({
   "motherName": zod.string().max(createRsvpBodyMotherNameMax),
   "phoneNumber": zod.string().max(createRsvpBodyPhoneNumberMax).nullish(),
   "belongTeam": zod.string().max(createRsvpBodyBelongTeamMax).nullish(),
+  "belongDept": zod.string().max(createRsvpBodyBelongDeptMax).nullish(),
   "children": zod.array(zod.object({
   "name": zod.string().min(1).max(createRsvpBodyChildrenItemNameMax),
   "age": zod.number().int().min(createRsvpBodyChildrenItemAgeMin).max(createRsvpBodyChildrenItemAgeMax)
@@ -207,6 +277,8 @@ export const createRsvpResponseChildrenItemNameMax = 50;
 export const createRsvpResponseChildrenItemAgeMin = 0;
 export const createRsvpResponseChildrenItemAgeMax = 30;
 
+export const createRsvpResponseTableNumberMax = 50;
+
 
 
 export const CreateRsvpResponse = zod.object({
@@ -215,6 +287,7 @@ export const CreateRsvpResponse = zod.object({
   "motherName": zod.string(),
   "phoneNumberMasked": zod.string(),
   "belongTeam": zod.string().nullable(),
+  "belongDept": zod.string().nullable(),
   "children": zod.array(zod.object({
   "name": zod.string().min(1).max(createRsvpResponseChildrenItemNameMax),
   "age": zod.number().int().min(createRsvpResponseChildrenItemAgeMin).max(createRsvpResponseChildrenItemAgeMax)
@@ -222,27 +295,161 @@ export const CreateRsvpResponse = zod.object({
   "adultCount": zod.number().int(),
   "childCount": zod.number().int(),
   "totalMembers": zod.number().int(),
+  "tableNumber": zod.number().int().min(1).max(createRsvpResponseTableNumberMax).nullable().describe('Table the family is seated at; assigned by the admin only'),
   "message": zod.string().nullable(),
   "createdAt": zod.coerce.date()
-}).describe('What a family (or anyone with the lookup name) can see; the phone number is masked')
+}).describe('What a family (or anyone who can look them up) can see; the phone number is masked')
 
 
 /**
- * Matches a whole name (father, mother or child), ignoring case and spaces
- * @summary Find RSVPs by a family member's name
+ * Replaces a family's RSVP details (admin only)
+ * @summary Update an RSVP
  */
-export const lookupRsvpsBodyNameMax = 50;
+export const UpdateRsvpParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const updateRsvpBodyFatherNameMax = 50;
+
+export const updateRsvpBodyMotherNameMax = 50;
+
+export const updateRsvpBodyPhoneNumberMax = 30;
+
+export const updateRsvpBodyBelongTeamMax = 50;
+
+export const updateRsvpBodyBelongDeptMax = 50;
+
+export const updateRsvpBodyChildrenItemNameMax = 50;
+
+export const updateRsvpBodyChildrenItemAgeMin = 0;
+export const updateRsvpBodyChildrenItemAgeMax = 30;
+
+export const updateRsvpBodyChildrenMax = 10;
+
+export const updateRsvpBodyMessageMax = 500;
+
+
+
+export const UpdateRsvpBody = zod.object({
+  "fatherName": zod.string().max(updateRsvpBodyFatherNameMax),
+  "motherName": zod.string().max(updateRsvpBodyMotherNameMax),
+  "phoneNumber": zod.string().max(updateRsvpBodyPhoneNumberMax).nullish(),
+  "belongTeam": zod.string().max(updateRsvpBodyBelongTeamMax).nullish(),
+  "belongDept": zod.string().max(updateRsvpBodyBelongDeptMax).nullish(),
+  "children": zod.array(zod.object({
+  "name": zod.string().min(1).max(updateRsvpBodyChildrenItemNameMax),
+  "age": zod.number().int().min(updateRsvpBodyChildrenItemAgeMin).max(updateRsvpBodyChildrenItemAgeMax)
+})).max(updateRsvpBodyChildrenMax),
+  "message": zod.string().max(updateRsvpBodyMessageMax).nullish()
+})
+
+export const updateRsvpResponseChildrenItemNameMax = 50;
+
+export const updateRsvpResponseChildrenItemAgeMin = 0;
+export const updateRsvpResponseChildrenItemAgeMax = 30;
+
+export const updateRsvpResponseTableNumberMax = 50;
+
+
+
+export const UpdateRsvpResponse = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "fatherName": zod.string(),
+  "motherName": zod.string(),
+  "phoneNumber": zod.string().nullable(),
+  "belongTeam": zod.string().nullable(),
+  "belongDept": zod.string().nullable(),
+  "email": zod.string().nullable(),
+  "children": zod.array(zod.object({
+  "name": zod.string().min(1).max(updateRsvpResponseChildrenItemNameMax),
+  "age": zod.number().int().min(updateRsvpResponseChildrenItemAgeMin).max(updateRsvpResponseChildrenItemAgeMax)
+})),
+  "adultCount": zod.number().int(),
+  "childCount": zod.number().int(),
+  "guestCount": zod.number().int(),
+  "tableNumber": zod.number().int().min(1).max(updateRsvpResponseTableNumberMax).nullable().describe('Table the family is seated at; assigned by the admin only'),
+  "message": zod.string().nullable(),
+  "createdAt": zod.coerce.date()
+}).describe('Full RSVP record, admin only')
+
+
+/**
+ * Removes a family's RSVP (admin only)
+ * @summary Delete an RSVP
+ */
+export const DeleteRsvpParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteRsvpResponse = zod.void()
+
+
+/**
+ * Sets or clears the table a family is seated at (admin only)
+ * @summary Assign a table
+ */
+export const AssignRsvpTableParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const assignRsvpTableBodyTableNumberMax = 50;
+
+
+
+export const AssignRsvpTableBody = zod.object({
+  "tableNumber": zod.number().int().min(1).max(assignRsvpTableBodyTableNumberMax).nullable()
+})
+
+export const assignRsvpTableResponseChildrenItemNameMax = 50;
+
+export const assignRsvpTableResponseChildrenItemAgeMin = 0;
+export const assignRsvpTableResponseChildrenItemAgeMax = 30;
+
+export const assignRsvpTableResponseTableNumberMax = 50;
+
+
+
+export const AssignRsvpTableResponse = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "fatherName": zod.string(),
+  "motherName": zod.string(),
+  "phoneNumber": zod.string().nullable(),
+  "belongTeam": zod.string().nullable(),
+  "belongDept": zod.string().nullable(),
+  "email": zod.string().nullable(),
+  "children": zod.array(zod.object({
+  "name": zod.string().min(1).max(assignRsvpTableResponseChildrenItemNameMax),
+  "age": zod.number().int().min(assignRsvpTableResponseChildrenItemAgeMin).max(assignRsvpTableResponseChildrenItemAgeMax)
+})),
+  "adultCount": zod.number().int(),
+  "childCount": zod.number().int(),
+  "guestCount": zod.number().int(),
+  "tableNumber": zod.number().int().min(1).max(assignRsvpTableResponseTableNumberMax).nullable().describe('Table the family is seated at; assigned by the admin only'),
+  "message": zod.string().nullable(),
+  "createdAt": zod.coerce.date()
+}).describe('Full RSVP record, admin only')
+
+
+/**
+ * Matches a whole name (father, mother or child), ignoring case and spaces, or the last 4 or more digits of the phone number
+ * @summary Find RSVPs by a family member's name or phone number
+ */
+export const lookupRsvpsBodyQueryMax = 50;
 
 
 
 export const LookupRsvpsBody = zod.object({
-  "name": zod.string().min(1).max(lookupRsvpsBodyNameMax)
+  "query": zod.string().min(1).max(lookupRsvpsBodyQueryMax).describe('A family member\'s whole name, or the last 4 or more digits of the phone number')
 })
 
 export const lookupRsvpsResponseChildrenItemNameMax = 50;
 
 export const lookupRsvpsResponseChildrenItemAgeMin = 0;
 export const lookupRsvpsResponseChildrenItemAgeMax = 30;
+
+export const lookupRsvpsResponseTableNumberMax = 50;
 
 
 
@@ -252,6 +459,7 @@ export const LookupRsvpsResponseItem = zod.object({
   "motherName": zod.string(),
   "phoneNumberMasked": zod.string(),
   "belongTeam": zod.string().nullable(),
+  "belongDept": zod.string().nullable(),
   "children": zod.array(zod.object({
   "name": zod.string().min(1).max(lookupRsvpsResponseChildrenItemNameMax),
   "age": zod.number().int().min(lookupRsvpsResponseChildrenItemAgeMin).max(lookupRsvpsResponseChildrenItemAgeMax)
@@ -259,9 +467,10 @@ export const LookupRsvpsResponseItem = zod.object({
   "adultCount": zod.number().int(),
   "childCount": zod.number().int(),
   "totalMembers": zod.number().int(),
+  "tableNumber": zod.number().int().min(1).max(lookupRsvpsResponseTableNumberMax).nullable().describe('Table the family is seated at; assigned by the admin only'),
   "message": zod.string().nullable(),
   "createdAt": zod.coerce.date()
-}).describe('What a family (or anyone with the lookup name) can see; the phone number is masked')
+}).describe('What a family (or anyone who can look them up) can see; the phone number is masked')
 export const LookupRsvpsResponse = zod.array(LookupRsvpsResponseItem)
 
 
@@ -277,6 +486,8 @@ export const getRsvpConfirmationResponseChildrenItemNameMax = 50;
 export const getRsvpConfirmationResponseChildrenItemAgeMin = 0;
 export const getRsvpConfirmationResponseChildrenItemAgeMax = 30;
 
+export const getRsvpConfirmationResponseTableNumberMax = 50;
+
 
 
 export const GetRsvpConfirmationResponse = zod.object({
@@ -285,6 +496,7 @@ export const GetRsvpConfirmationResponse = zod.object({
   "motherName": zod.string(),
   "phoneNumberMasked": zod.string(),
   "belongTeam": zod.string().nullable(),
+  "belongDept": zod.string().nullable(),
   "children": zod.array(zod.object({
   "name": zod.string().min(1).max(getRsvpConfirmationResponseChildrenItemNameMax),
   "age": zod.number().int().min(getRsvpConfirmationResponseChildrenItemAgeMin).max(getRsvpConfirmationResponseChildrenItemAgeMax)
@@ -292,9 +504,10 @@ export const GetRsvpConfirmationResponse = zod.object({
   "adultCount": zod.number().int(),
   "childCount": zod.number().int(),
   "totalMembers": zod.number().int(),
+  "tableNumber": zod.number().int().min(1).max(getRsvpConfirmationResponseTableNumberMax).nullable().describe('Table the family is seated at; assigned by the admin only'),
   "message": zod.string().nullable(),
   "createdAt": zod.coerce.date()
-}).describe('What a family (or anyone with the lookup name) can see; the phone number is masked')
+}).describe('What a family (or anyone who can look them up) can see; the phone number is masked')
 
 
 /**

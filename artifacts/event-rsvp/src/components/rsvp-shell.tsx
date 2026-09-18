@@ -2,6 +2,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Link } from 'wouter';
 import { getGetEventQueryKey, useGetEvent, type Event } from '@workspace/api-client-react';
 import { Corners } from '@/components/ornaments';
+import { useCardStyle } from '@/lib/card-styles';
 import { useDocumentTitle } from '@/lib/document-title';
 import { useTheme } from '@/lib/themes';
 
@@ -9,7 +10,8 @@ import { useTheme } from '@/lib/themes';
 export function RsvpShell({ children, backLabel = '초대장으로' }: { children: (event: Event) => React.ReactNode; backLabel?: string | null }) {
   const eventQuery = useGetEvent({ query: { queryKey: getGetEventQueryKey() } });
   const event = eventQuery.data;
-  useTheme(event?.theme);
+  useTheme(event);
+  useCardStyle(event?.cardStyle);
   useDocumentTitle(event && `${event.title} RSVP`);
 
   return (

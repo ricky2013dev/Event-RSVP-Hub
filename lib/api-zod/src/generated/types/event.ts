@@ -5,6 +5,8 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ChoiceOption } from './choiceOption';
+import type { EventCardStyle } from './eventCardStyle';
 import type { EventTheme } from './eventTheme';
 
 export interface Event {
@@ -24,11 +26,38 @@ export interface Event {
   imageUrl: string;
   featuredNote: string;
   theme: EventTheme;
+  cardStyle: EventCardStyle;
+  /**
+     * Main colour the "custom" theme is built from
+     * @pattern ^#[0-9a-fA-F]{6}$
+     */
+  themeColor: string;
+  /**
+     * Frame and detail colour of the "custom" theme
+     * @pattern ^#[0-9a-fA-F]{6}$
+     */
+  themeAccent: string;
   /**
      * Label for the team field on the RSVP form; empty hides the field
      * @maxLength 30
      */
   belongTeamLabel: string;
+  /**
+     * Label for the department field on the RSVP form; empty hides the field
+     * @maxLength 30
+     */
+  belongDeptLabel: string;
+  /**
+     * Choices for the department field; empty turns it back into a free-text box
+     * @maxItems 20
+     */
+  belongDeptOptions: ChoiceOption[];
+  /**
+     * How many tables the seating board shows
+     * @minimum 1
+     * @maximum 50
+     */
+  tableCount: number;
   /**
      * Heading for the RSVP form's message box; empty hides the box
      * @maxLength 30
