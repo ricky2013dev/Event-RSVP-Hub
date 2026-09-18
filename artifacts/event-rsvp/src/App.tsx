@@ -20,7 +20,7 @@ const queryClient = new QueryClient();
 function formatDate(date: string) {
   const parsed = new Date(`${date.slice(0, 10)}T12:00:00`);
   if (Number.isNaN(parsed.getTime())) return date;
-  return new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }).format(parsed);
+  return new Intl.DateTimeFormat('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(parsed);
 }
 
 function formatTime(time: string) {
@@ -28,7 +28,7 @@ function formatTime(time: string) {
   if (Number.isNaN(hours)) return time;
   const date = new Date();
   date.setHours(hours, minutes || 0, 0, 0);
-  return new Intl.DateTimeFormat('ko-KR', minutes ? { hour: 'numeric', minute: '2-digit' } : { hour: 'numeric' }).format(date);
+  return new Intl.DateTimeFormat('en-US', minutes ? { hour: 'numeric', minute: '2-digit' } : { hour: 'numeric' }).format(date);
 }
 
 function Invitation() {
