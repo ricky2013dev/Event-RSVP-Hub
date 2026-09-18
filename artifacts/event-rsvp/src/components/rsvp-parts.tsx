@@ -1,5 +1,6 @@
 import { Users } from 'lucide-react';
 import type { ChoiceOption, RsvpChild } from '@workspace/api-client-react';
+import { useLang } from '@/lib/i18n';
 
 // US numbers read as 972-555-0123; a Korean mobile (010…) as 010-1234-5678.
 export function formatPhone(value: string) {
@@ -54,27 +55,29 @@ export function optionLabel(options: ChoiceOption[], value: string | null | unde
 }
 
 export function FamilyDetails({ family, labels }: { family: FamilySummary; labels: FieldLabels }) {
+  const { t } = useLang();
   return (
     <dl className="family">
-      {family.fatherName && <div><dt>아빠</dt><dd>{family.fatherName}</dd></div>}
-      {family.motherName && <div><dt>엄마</dt><dd>{family.motherName}</dd></div>}
-      {family.phone && <div><dt>연락처</dt><dd>{family.phone}</dd></div>}
-      {family.belongDept && <div><dt>{labels.deptLabel || '소속 부서'}</dt><dd>{optionLabel(labels.deptOptions, family.belongDept)}</dd></div>}
-      {family.belongTeam && <div><dt>{labels.teamLabel || '소속'}</dt><dd>{family.belongTeam}</dd></div>}
-      {family.tableNumber != null && <div><dt>테이블</dt><dd data-testid="text-table-number">{family.tableNumber}번</dd></div>}
-      <div><dt>자녀</dt><dd>{family.children.length === 0 ? '없음' : family.children.map((child) => `${child.name} (${child.age}살)`).join('\n')}</dd></div>
-      {family.message && <div><dt>{labels.messageLabel || '메시지'}</dt><dd>{family.message}</dd></div>}
+      {family.fatherName && <div><dt>{t.father}</dt><dd>{family.fatherName}</dd></div>}
+      {family.motherName && <div><dt>{t.mother}</dt><dd>{family.motherName}</dd></div>}
+      {family.phone && <div><dt>{t.phone}</dt><dd>{family.phone}</dd></div>}
+      {family.belongDept && <div><dt>{labels.deptLabel || t.deptFallback}</dt><dd>{optionLabel(labels.deptOptions, family.belongDept)}</dd></div>}
+      {family.belongTeam && <div><dt>{labels.teamLabel || t.teamFallback}</dt><dd>{family.belongTeam}</dd></div>}
+      {family.tableNumber != null && <div><dt>{t.table}</dt><dd data-testid="text-table-number">{t.tableNo(family.tableNumber)}</dd></div>}
+      <div><dt>{t.childrenLabel}</dt><dd>{family.children.length === 0 ? t.none : family.children.map((child) => t.childWithAge(child.name, child.age)).join('\n')}</dd></div>
+      {family.message && <div><dt>{labels.messageLabel || t.messageFallback}</dt><dd>{family.message}</dd></div>}
     </dl>
   );
 }
 
 export function TotalBar({ adults, children, testId }: { adults: number; children: number; testId: string }) {
+  const { t } = useLang();
   return (
     <div className="total-bar">
-      <span className="total-label"><Users size={16} /> 총 참석 인원</span>
+      <span className="total-label"><Users size={16} /> {t.totalAttending}</span>
       <span className="total-value">
-        <small>어른 {adults} · 자녀 {children}</small>
-        <strong data-testid={testId}>{adults + children}명</strong>
+        <small>{t.adultsChildren(adults, children)}</small>
+        <strong data-testid={testId}>{t.totalPeople(adults + children)}</strong>
       </span>
     </div>
   );

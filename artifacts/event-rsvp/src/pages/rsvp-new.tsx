@@ -11,6 +11,7 @@ import {
 import { Flourish } from '@/components/ornaments';
 import { FamilyDetails, formatPhone, labelsFor, RuledLabel, TotalBar } from '@/components/rsvp-parts';
 import { RsvpShell } from '@/components/rsvp-shell';
+import { useLang } from '@/lib/i18n';
 
 type ChildRow = { key: string; name: string; age: string };
 
@@ -21,6 +22,7 @@ function RsvpForm({ event }: { event: Event }) {
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
   const createRsvp = useCreateRsvp();
+  const { t } = useLang();
   const [step, setStep] = useState<'form' | 'confirm'>('form');
 
   const [fatherName, setFatherName] = useState('');
@@ -55,15 +57,15 @@ function RsvpForm({ event }: { event: Event }) {
 
   function review() {
     const next: Record<string, string> = {};
-    if (!fatherName.trim() && !motherName.trim()) next.parents = '아빠 또는 엄마 이름 중 최소 한 분은 입력해 주세요.';
-    if (deptRequired && !belongDept.trim()) next.belongDept = `${deptLabel}을(를) 선택해 주세요.`;
+    if (!fatherName.trim() && !motherName.trim()) next.parents = t.errParents;
+    if (deptRequired && !belongDept.trim()) next.belongDept = t.errChoose(deptLabel);
     children.forEach((child, index) => {
       const name = child.name.trim();
       const age = child.age.trim();
-      if (!name && !age) next[child.key] = '아이 이름과 나이를 입력하거나 이 칸을 삭제해 주세요.';
-      else if (!name) next[child.key] = `${index + 1}번째 아이의 이름을 입력해 주세요.`;
-      else if (!age) next[child.key] = `${name}의 나이를 입력해 주세요.`;
-      else if (!Number.isInteger(Number(age)) || Number(age) < 0 || Number(age) > 30) next[child.key] = '나이는 0살에서 30살 사이로 입력해 주세요.';
+      if (!name && !age) next[child.key] = t.errChildBlank;
+      else if (!name) next[child.key] = t.errChildName(index + 1);
+      else if (!age) next[child.key] = t.errChildAge(name);
+      else if (!Number.isInteger(Number(age)) || Number(age) < 0 || Number(age) > 30) next[child.key] = t.errChildAgeRange;
     });
     setErrors(next);
     setSubmitError('');
@@ -90,7 +92,7 @@ function RsvpForm({ event }: { event: Event }) {
           navigate(`/rsvp/complete?token=${family.confirmToken}`);
         },
         onError: () => {
-          setSubmitError('RSVP 등록에 실패했어요. 잠시 후 다시 시도해 주세요.');
+          setSubmitError(t.errSubmit);
           setStep('form');
         },
       },
@@ -101,8 +103,8 @@ function RsvpForm({ event }: { event: Event }) {
     return (
       <div className="panel">
         <div className="panel-head">
-          <h1>내용확인후 제출하기를 클릭해 주세요</h1>
-          <p>제출하기 버튼을 클릭하시면 등록됩니다.</p>
+          <h1>{t.confirmTitle}</h1>
+          <p>{t.confirmLead}</p>
           <Flourish />
         </div>
         <FamilyDetails
@@ -111,8 +113,8 @@ function RsvpForm({ event }: { event: Event }) {
         />
         <TotalBar adults={adultCount} children={completeChildren.length} testId="text-confirm-total" />
         {submitError && <p className="error" role="alert">{submitError}</p>}
-        <button className="btn btn-primary" type="button" onClick={submit} disabled={createRsvp.isPending} data-testid="button-submit-rsvp">{createRsvp.isPending ? '등록 중…' : 'RSVP 제출하기'}</button>
-        <button className="btn btn-ghost" type="button" onClick={() => setStep('form')} disabled={createRsvp.isPending} data-testid="button-edit-form"><Pencil size={15} /> 다시 수정하기</button>
+        <button className="btn btn-primary" type="button" onClick={submit} disabled={createRsvp.isPending} data-testid="button-submit-rsvp">{createRsvp.isPending ? t.submitting : t.submit}</button>
+        <button className="btn btn-ghost" type="button" onClick={() => setStep('form')} disabled={createRsvp.isPending} data-testid="button-edit-form"><Pencil size={15} /> {t.editAgain}</button>
       </div>
     );
   }
@@ -120,18 +122,18 @@ function RsvpForm({ event }: { event: Event }) {
   return (
     <div className="panel">
       <div className="panel-head">
-        <h1>참석 정보 입력</h1>
+        <h1>{t.formTitle}</h1>
         <Flourish />
       </div>
 
       <section className="form-section">
-        <RuledLabel>가족 대표 정보</RuledLabel>
+        <RuledLabel>{t.sectionFamily}</RuledLabel>
         <div className="two-col">
-          <label className="field"><span>아빠 이름</span><input value={fatherName} onChange={(e) => { setFatherName(e.target.value); setErrors((x) => ({ ...x, parents: '' })); }} placeholder="홍길동" data-testid="input-father-name" /></label>
-          <label className="field"><span>엄마 이름</span><input value={motherName} onChange={(e) => { setMotherName(e.target.value); setErrors((x) => ({ ...x, parents: '' })); }} placeholder="김영희" data-testid="input-mother-name" /></label>
+          <label className="field"><span>{t.fatherName}</span><input value={fatherName} onChange={(e) => { setFatherName(e.target.value); setErrors((x) => ({ ...x, parents: '' })); }} placeholder={t.fatherPlaceholder} data-testid="input-father-name" /></label>
+          <label className="field"><span>{t.motherName}</span><input value={motherName} onChange={(e) => { setMotherName(e.target.value); setErrors((x) => ({ ...x, parents: '' })); }} placeholder={t.motherPlaceholder} data-testid="input-mother-name" /></label>
         </div>
         {errors.parents && <p className="field-error">{errors.parents}</p>}
-        <label className="field"><span>연락처 <em>(옵션사항)</em></span><input type="tel" inputMode="tel" autoComplete="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(formatPhone(e.target.value))} placeholder="972-555-0123" data-testid="input-phone" /></label>
+        <label className="field"><span>{t.phone} <em>{t.optional}</em></span><input type="tel" inputMode="tel" autoComplete="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(formatPhone(e.target.value))} placeholder="972-555-0123" data-testid="input-phone" /></label>
         {/* Choices need the full width; a plain text box still pairs up with the team field. */}
         {deptLabel && deptOptions.length > 0 && (
           <fieldset className="field choice-field">
@@ -150,49 +152,49 @@ function RsvpForm({ event }: { event: Event }) {
         {(deptAsText || teamLabel) && (
           <div className={deptAsText && teamLabel ? 'two-col' : undefined}>
             {deptAsText && (
-              <label className="field"><span>{deptLabel} <em>(옵션사항)</em></span><input value={belongDept} maxLength={50} onChange={(e) => setBelongDept(e.target.value)} data-testid="input-belong-dept" /></label>
+              <label className="field"><span>{deptLabel} <em>{t.optional}</em></span><input value={belongDept} maxLength={50} onChange={(e) => setBelongDept(e.target.value)} data-testid="input-belong-dept" /></label>
             )}
             {teamLabel && (
-              <label className="field"><span>{teamLabel} <em>(옵션사항)</em></span><input value={belongTeam} maxLength={50} onChange={(e) => setBelongTeam(e.target.value)} data-testid="input-belong-team" /></label>
+              <label className="field"><span>{teamLabel} <em>{t.optional}</em></span><input value={belongTeam} maxLength={50} onChange={(e) => setBelongTeam(e.target.value)} data-testid="input-belong-team" /></label>
             )}
           </div>
         )}
       </section>
 
       <section className="form-section">
-        <RuledLabel aside={`${children.length}명`}>자녀 정보</RuledLabel>
+        <RuledLabel aside={t.childCount(children.length)}>{t.sectionChildren}</RuledLabel>
         {children.length === 0 ? (
-          <p className="hint-box">자녀가 있다면  추가.</p>
+          <p className="hint-box">{t.childrenEmpty}</p>
         ) : (
           children.map((child, index) => (
             <div className="child-row" key={child.key}>
               <div className="child-row-head">
-                <span><Baby size={16} /> 자녀 {index + 1}</span>
-                <button type="button" className="remove" onClick={() => setChildren((rows) => rows.filter((row) => row.key !== child.key))} data-testid={`button-remove-child-${index}`}><Trash2 size={14} /> 삭제</button>
+                <span><Baby size={16} /> {t.childN(index + 1)}</span>
+                <button type="button" className="remove" onClick={() => setChildren((rows) => rows.filter((row) => row.key !== child.key))} data-testid={`button-remove-child-${index}`}><Trash2 size={14} /> {t.remove}</button>
               </div>
               <div className="child-cols">
-                <label className="field"><span>아이 이름</span><input value={child.name} onChange={(e) => updateChild(child.key, { name: e.target.value })} placeholder="홍민수" data-testid={`input-child-name-${index}`} /></label>
-                <label className="field"><span>나이</span><input type="number" inputMode="numeric" min={0} max={30} value={child.age} onChange={(e) => updateChild(child.key, { age: e.target.value })} placeholder="7" data-testid={`input-child-age-${index}`} /></label>
+                <label className="field"><span>{t.childName}</span><input value={child.name} onChange={(e) => updateChild(child.key, { name: e.target.value })} placeholder={t.childNamePlaceholder} data-testid={`input-child-name-${index}`} /></label>
+                <label className="field"><span>{t.childAge}</span><input type="number" inputMode="numeric" min={0} max={30} value={child.age} onChange={(e) => updateChild(child.key, { age: e.target.value })} placeholder="7" data-testid={`input-child-age-${index}`} /></label>
               </div>
               {errors[child.key] && <p className="field-error">{errors[child.key]}</p>}
             </div>
           ))
         )}
         {children.length < MAX_CHILDREN && (
-          <button type="button" className="btn btn-dashed" onClick={() => setChildren((rows) => [...rows, newChildRow()])} data-testid="button-add-child"><Plus size={16} /> 자녀 추가</button>
+          <button type="button" className="btn btn-dashed" onClick={() => setChildren((rows) => [...rows, newChildRow()])} data-testid="button-add-child"><Plus size={16} /> {t.addChild}</button>
         )}
       </section>
 
       {messageLabel && (
         <section className="form-section">
-          <RuledLabel>{messageLabel} (옵션사항)</RuledLabel>
+          <RuledLabel>{messageLabel} {t.optional}</RuledLabel>
           <label className="field"><span className="sr-only">{messageLabel}</span><textarea rows={2} maxLength={500} value={message} onChange={(e) => setMessage(e.target.value)} placeholder={event.messagePlaceholder} data-testid="input-message" /></label>
         </section>
       )}
 
       <TotalBar adults={adultCount} children={completeChildren.length} testId="text-total-members" />
       {submitError && <p className="error" role="alert">{submitError}</p>}
-      <button className="btn btn-primary" type="button" onClick={review} data-testid="button-review-rsvp">입력 내용 확인하기</button>
+      <button className="btn btn-primary" type="button" onClick={review} data-testid="button-review-rsvp">{t.review}</button>
     </div>
   );
 }

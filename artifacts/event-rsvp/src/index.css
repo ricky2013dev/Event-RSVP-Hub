@@ -298,6 +298,12 @@ a.btn { text-decoration: none; }
 .card-gear { width: 28px; height: 28px; margin: 12px auto 0; border-color: var(--line); background: none; color: var(--muted); opacity: .7; }
 .card-gear:hover { opacity: 1; color: var(--gold); border-color: var(--gold-soft); }
 .topbar-link { display: inline-flex; align-items: center; gap: 6px; padding: 6px 4px; border: 0; background: none; color: var(--muted); font-size: .9rem; text-decoration: none; }
+/* English / Korean switch: two bare flags at the top of the card, centred between the
+   corner ornaments. No frame, and neither flag is marked, dimmed or moved — the page's
+   own language is what tells the guest which one is on. `aria-pressed` still carries
+   the state for screen readers. */
+.lang-switch { display: flex; justify-content: center; align-items: center; gap: 12px; margin: -14px auto 16px; width: fit-content; }
+.lang-switch button { padding: 0; border: 0; background: none; font-size: 1rem; line-height: 1.15; }
 .topbar-link:hover { color: var(--ink); }
 
 .modal-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; background: color-mix(in srgb, var(--ink) 35%, transparent); backdrop-filter: blur(2px); }
@@ -542,6 +548,9 @@ a.btn { text-decoration: none; }
    photo while short ones give the space to the details and the buttons. */
 @media (max-width: 640px) {
   .page { padding: 6px 12px 12px; }
+  .topbar { min-height: 0; margin-bottom: 4px; }
+  .lang-switch { margin: -8px auto 10px; gap: 11px; }
+  .lang-switch button { font-size: .95rem; }
   .card { padding: 18px 16px 14px; --photo-size: clamp(88px, 14dvh, 190px); }
   [data-card-style='party'] .card { --photo-size: clamp(94px, 15dvh, 200px); }
   .corner { width: 40px; height: 40px; }

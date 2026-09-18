@@ -4,10 +4,13 @@ import { getGetEventQueryKey, useGetEvent, type Event } from '@workspace/api-cli
 import { Corners } from '@/components/ornaments';
 import { useCardStyle } from '@/lib/card-styles';
 import { useDocumentTitle } from '@/lib/document-title';
+import { LangSwitch, useLang } from '@/lib/i18n';
 import { useTheme } from '@/lib/themes';
 
 // Layout for the standalone RSVP pages: themed card, no invitation header or event details.
-export function RsvpShell({ children, backLabel = '초대장으로' }: { children: (event: Event) => React.ReactNode; backLabel?: string | null }) {
+// `showBack` is off on the confirmation page, which offers its own way back.
+export function RsvpShell({ children, showBack = true }: { children: (event: Event) => React.ReactNode; showBack?: boolean }) {
+  const { t } = useLang();
   const eventQuery = useGetEvent({ query: { queryKey: getGetEventQueryKey() } });
   const event = eventQuery.data;
   useTheme(event);
@@ -17,16 +20,17 @@ export function RsvpShell({ children, backLabel = '초대장으로' }: { childre
   return (
     <main className="page">
       <div className="topbar">
-        {backLabel && <Link className="topbar-link" href="/" data-testid="link-back-invitation"><ArrowLeft size={16} /> {backLabel}</Link>}
+        {showBack && <Link className="topbar-link" href="/" data-testid="link-back-invitation"><ArrowLeft size={16} /> {t.back}</Link>}
       </div>
       <article className="card rsvp-page">
         <Corners />
+        <LangSwitch />
         {eventQuery.isLoading ? (
-          <p className="admin-muted center-text">불러오는 중…</p>
+          <p className="admin-muted center-text">{t.loading}</p>
         ) : eventQuery.isError || !event ? (
           <div className="panel">
-            <p className="lead">페이지를 불러오지 못했어요.</p>
-            <button className="btn btn-primary" type="button" onClick={() => void eventQuery.refetch()}>다시 시도</button>
+            <p className="lead">{t.pageError}</p>
+            <button className="btn btn-primary" type="button" onClick={() => void eventQuery.refetch()}>{t.tryAgain}</button>
           </div>
         ) : (
           children(event)

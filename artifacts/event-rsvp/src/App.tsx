@@ -9,6 +9,7 @@ import { Corners, Flourish } from '@/components/ornaments';
 import { hasAdminSession } from '@/lib/admin-session';
 import { useCardStyle, useCurrentCardStyle } from '@/lib/card-styles';
 import { useDocumentTitle } from '@/lib/document-title';
+import { LangProvider, LangSwitch, LOCALE, useLang, type Lang } from '@/lib/i18n';
 import { useTheme } from '@/lib/themes';
 import AdminPage from '@/pages/admin';
 import RsvpCompletePage from '@/pages/rsvp-complete';
@@ -17,18 +18,18 @@ import RsvpNewPage from '@/pages/rsvp-new';
 
 const queryClient = new QueryClient();
 
-function formatDate(date: string) {
+function formatDate(date: string, lang: Lang) {
   const parsed = new Date(`${date.slice(0, 10)}T12:00:00`);
   if (Number.isNaN(parsed.getTime())) return date;
-  return new Intl.DateTimeFormat('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(parsed);
+  return new Intl.DateTimeFormat(LOCALE[lang], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(parsed);
 }
 
-function formatTime(time: string) {
+function formatTime(time: string, lang: Lang) {
   const [hours, minutes] = time.split(':').map(Number);
   if (Number.isNaN(hours)) return time;
   const date = new Date();
   date.setHours(hours, minutes || 0, 0, 0);
-  return new Intl.DateTimeFormat('en-US', minutes ? { hour: 'numeric', minute: '2-digit' } : { hour: 'numeric' }).format(date);
+  return new Intl.DateTimeFormat(LOCALE[lang], minutes ? { hour: 'numeric', minute: '2-digit' } : { hour: 'numeric' }).format(date);
 }
 
 function Invitation() {
@@ -36,6 +37,7 @@ function Invitation() {
   const summaryQuery = useGetRsvpSummary({ query: { queryKey: getGetRsvpSummaryQueryKey() } });
   const [loginOpen, setLoginOpen] = useState(false);
   const [, navigate] = useLocation();
+  const { lang, t } = useLang();
 
   const event = eventQuery.data;
   const summary = summaryQuery.data;
@@ -57,15 +59,15 @@ function Invitation() {
     return (
       <main className="page">
         <article className="card" data-testid="state-event-error">
-          <p className="lead">초대장을 불러오지 못했어요.</p>
-          <button className="btn btn-primary" type="button" onClick={() => void eventQuery.refetch()} data-testid="button-retry-event">다시 시도</button>
+          <p className="lead">{t.invitationError}</p>
+          <button className="btn btn-primary" type="button" onClick={() => void eventQuery.refetch()} data-testid="button-retry-event">{t.tryAgain}</button>
         </article>
       </main>
     );
   }
 
   const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address)}`;
-  const eventTime = event.endTime ? `${formatTime(event.startTime)} – ${formatTime(event.endTime)}` : formatTime(event.startTime);
+  const eventTime = event.endTime ? `${formatTime(event.startTime, lang)} – ${formatTime(event.endTime, lang)}` : formatTime(event.startTime, lang);
 
   return (
     <main className="page">
@@ -78,6 +80,7 @@ function Invitation() {
       )}
       <article className="card" data-testid="invitation-card">
         <Corners />
+        <LangSwitch />
 
         <div className="photo-wrap">
           {cardStyle.sparkles.map((glyph, index) => <span className={`sparkle s${index + 1}`} key={index}>{glyph}</span>)}
@@ -93,38 +96,38 @@ function Invitation() {
         {event.featuredNote && <p className="note" data-testid="text-featured-note">{event.featuredNote}</p>}
 
         <section className="details">
-          <div className="detail"><span className="detail-icon"><CalendarHeart size={18} /></span><div><div className="detail-label">날짜</div><div className="detail-value" data-testid="text-event-date">{formatDate(event.date)}</div></div></div>
-          <div className="detail"><span className="detail-icon"><Clock3 size={18} /></span><div><div className="detail-label">시간</div><div className="detail-value" data-testid="text-event-time">{eventTime}</div></div></div>
+          <div className="detail"><span className="detail-icon"><CalendarHeart size={18} /></span><div><div className="detail-label">{t.date}</div><div className="detail-value" data-testid="text-event-date">{formatDate(event.date, lang)}</div></div></div>
+          <div className="detail"><span className="detail-icon"><Clock3 size={18} /></span><div><div className="detail-label">{t.time}</div><div className="detail-value" data-testid="text-event-time">{eventTime}</div></div></div>
           <div className="detail">
             <span className="detail-icon"><MapPin size={18} /></span>
             <div>
-              <div className="detail-label">장소</div>
+              <div className="detail-label">{t.venue}</div>
               <div className="detail-value" data-testid="text-event-venue">{event.venue}</div>
               <div className="detail-value">{event.address}</div>
-              <a className="map-link" href={mapUrl} target="_blank" rel="noreferrer" data-testid="link-map">지도에서 보기 <ExternalLink size={13} /></a>
+              <a className="map-link" href={mapUrl} target="_blank" rel="noreferrer" data-testid="link-map">{t.mapLink} <ExternalLink size={13} /></a>
             </div>
           </div>
-          {event.dressCode && <div className="detail"><span className="detail-icon"><Shirt size={18} /></span><div><div className="detail-label">복장</div><div className="detail-value" data-testid="text-dress-code">{event.dressCode}</div></div></div>}
+          {event.dressCode && <div className="detail"><span className="detail-icon"><Shirt size={18} /></span><div><div className="detail-label">{t.dressCode}</div><div className="detail-value" data-testid="text-dress-code">{event.dressCode}</div></div></div>}
         </section>
 
         <div className="actions">
-          <Link className="btn btn-primary" href="/rsvp/new" data-testid="button-open-rsvp">참석 RSVP</Link>
-          <Link className="btn btn-outline" href="/rsvp/lookup" data-testid="button-open-lookup"><Search size={18} /> 기존 예약 확인하기</Link>
+          <Link className="btn btn-primary" href="/rsvp/new" data-testid="button-open-rsvp">{t.openRsvp}</Link>
+          <Link className="btn btn-outline" href="/rsvp/lookup" data-testid="button-open-lookup"><Search size={18} /> {t.openLookup}</Link>
         </div>
 
         {event.showSummary && (
           <>
-            <p className="stats-caption"><Users size={17} /> 지금까지 알려주신 참석 현황이에요</p>
+            <p className="stats-caption"><Users size={17} /> {t.statsCaption}</p>
             <section className="stats" data-testid="summary-grid">
-              <div className="stat"><div className="stat-label">등록 가족</div><div className="stat-value" data-testid="text-families">{summary?.attendingResponses ?? '–'}<small>가족</small></div></div>
-              <div className="stat highlight"><div className="stat-label">총 참석 예정 인원</div><div className="stat-value" data-testid="text-total-guests">{summary?.totalGuests ?? '–'}<small>명</small></div></div>
-              <div className="stat"><div className="stat-label">어른 / 자녀</div><div className="stat-value" data-testid="text-adults-children">{summary ? `${summary.totalAdults} / ${summary.totalChildren}` : '–'}<small>명</small></div></div>
+              <div className="stat"><div className="stat-label">{t.statFamilies}</div><div className="stat-value" data-testid="text-families">{summary?.attendingResponses ?? '–'}<small>{t.unitFamilies}</small></div></div>
+              <div className="stat highlight"><div className="stat-label">{t.statTotal}</div><div className="stat-value" data-testid="text-total-guests">{summary?.totalGuests ?? '–'}<small>{t.unitPeople}</small></div></div>
+              <div className="stat"><div className="stat-label">{t.statAdultsChildren}</div><div className="stat-value" data-testid="text-adults-children">{summary ? `${summary.totalAdults} / ${summary.totalChildren}` : '–'}<small>{t.unitPeople}</small></div></div>
             </section>
           </>
         )}
 
-        <p className="footnote">입력하신 정보는 RSVP 목적으로만 사용되며<br />행사 종료 후 안전하게 폐기됩니다.</p>
-        <button className="gear card-gear" type="button" aria-label="관리자" onClick={openAdmin} data-testid="button-open-admin"><Settings size={16} /></button>
+        <p className="footnote">{t.privacyNote1}<br />{t.privacyNote2}</p>
+        <button className="gear card-gear" type="button" aria-label={t.admin} onClick={openAdmin} data-testid="button-open-admin"><Settings size={16} /></button>
       </article>
     </main>
   );
@@ -139,6 +142,7 @@ function Home() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <LangProvider>
       <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
         <ErrorBoundary>
           <Switch>
@@ -151,6 +155,7 @@ function App() {
           </Switch>
         </ErrorBoundary>
       </WouterRouter>
+      </LangProvider>
     </QueryClientProvider>
   );
 }
