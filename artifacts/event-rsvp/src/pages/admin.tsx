@@ -32,7 +32,7 @@ type SettingsPane = 'design' | 'invitation' | 'when' | 'rsvp';
 const SETTINGS_PANES: { id: SettingsPane; name: string; icon: typeof Palette }[] = [
   { id: 'design', name: '디자인', icon: Palette },
   { id: 'invitation', name: '초대장', icon: ScrollText },
-  { id: 'when', name: '일정 · 장소', icon: CalendarDays },
+  { id: 'when', name: '장소', icon: CalendarDays },
   { id: 'rsvp', name: '접수', icon: ClipboardList },
 ];
 
