@@ -1,29 +1,41 @@
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
-import { integer, pgTable, serial, text, timestamp, unique } from "drizzle-orm/pg-core";
+import { integer, jsonb, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { z } from "zod/v4";
 
-export const rsvpsTable = pgTable(
-  "rsvps",
-  {
-    id: serial("id").primaryKey(),
-    eventId: integer("event_id").notNull().default(1),
-    name: text("name").notNull(),
-    email: text("email").notNull(),
-    attendance: text("attendance").notNull(),
-    guestCount: integer("guest_count").notNull().default(0),
-    mealPreference: text("meal_preference").notNull().default("noPreference"),
-    dietaryNotes: text("dietary_notes"),
-    message: text("message"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true })
-      .notNull()
-      .defaultNow()
-      .$onUpdate(() => new Date()),
-  },
-  (table) => ({
-    emailEventUnique: unique("rsvps_event_email_unique").on(table.eventId, table.email),
-  }),
-);
+export type RsvpChild = { name: string; age: number };
+
+export const rsvpsTable = pgTable("rsvps", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").notNull().default(1),
+  // Display name for the family, derived from the parents' names.
+  name: text("name").notNull(),
+  fatherName: text("father_name").notNull().default(""),
+  motherName: text("mother_name").notNull().default(""),
+  phoneNumber: text("phone_number"),
+  // Team/group the family belongs to; the label is set per event (events.belong_team_label).
+  belongTeam: text("belong_team"),
+  children: jsonb("children").$type<RsvpChild[]>().notNull().default([]),
+  // Legacy columns from the email-based form; kept so older rows still load.
+  email: text("email"),
+  attendance: text("attendance").notNull().default("attending"),
+  guestCount: integer("guest_count").notNull().default(0),
+  adultCount: integer("adult_count").notNull().default(0),
+  childCount: integer("child_count").notNull().default(0),
+  mealPreference: text("meal_preference").notNull().default("noPreference"),
+  dietaryNotes: text("dietary_notes"),
+  message: text("message"),
+  // Private link token so a family can re-open their confirmation later.
+  confirmToken: text("confirm_token")
+    .notNull()
+    .unique()
+    .default(sql`replace(gen_random_uuid()::text, '-', '')`),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
 
 export const insertRsvpSchema = createInsertSchema(rsvpsTable).omit({
   id: true,

@@ -21,6 +21,14 @@ export const HealthCheckResponse = zod.object({
  * Returns the event currently accepting RSVPs
  * @summary Get event details
  */
+export const getEventResponseBelongTeamLabelMax = 30;
+
+export const getEventResponseMessageLabelMax = 30;
+
+export const getEventResponseMessagePlaceholderMax = 100;
+
+
+
 export const GetEventResponse = zod.object({
   "id": zod.number().int(),
   "title": zod.string(),
@@ -36,63 +44,257 @@ export const GetEventResponse = zod.object({
   "hostName": zod.string(),
   "capacity": zod.number().int(),
   "imageUrl": zod.string(),
-  "featuredNote": zod.string()
+  "featuredNote": zod.string(),
+  "theme": zod.enum(['rose', 'sage', 'sky', 'lavender', 'butter', 'navy']).describe('Color palette for the invitation'),
+  "belongTeamLabel": zod.string().max(getEventResponseBelongTeamLabelMax).describe('Label for the team field on the RSVP form; empty hides the field'),
+  "messageLabel": zod.string().max(getEventResponseMessageLabelMax).describe('Heading for the RSVP form\'s message box; empty hides the box'),
+  "messagePlaceholder": zod.string().max(getEventResponseMessagePlaceholderMax)
 })
 
 
 /**
- * Returns RSVP responses for the event
+ * Replaces the event details (admin only)
+ * @summary Update event details
+ */
+
+export const updateEventBodyStartTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+export const updateEventBodyEndTimeRegExp = new RegExp('^(([01][0-9]|2[0-3]):[0-5][0-9])?$');
+export const updateEventBodyCapacityMin = 0;
+
+export const updateEventBodyBelongTeamLabelMax = 30;
+
+export const updateEventBodyMessageLabelMax = 30;
+
+export const updateEventBodyMessagePlaceholderMax = 100;
+
+
+
+export const UpdateEventBody = zod.object({
+  "title": zod.string().min(1),
+  "subtitle": zod.string(),
+  "description": zod.string(),
+  "date": zod.coerce.date(),
+  "startTime": zod.string().regex(updateEventBodyStartTimeRegExp),
+  "endTime": zod.string().regex(updateEventBodyEndTimeRegExp).describe('Empty when the invitation shows only a start time'),
+  "timezone": zod.string(),
+  "venue": zod.string(),
+  "address": zod.string(),
+  "dressCode": zod.string(),
+  "hostName": zod.string(),
+  "capacity": zod.number().int().min(updateEventBodyCapacityMin),
+  "imageUrl": zod.string(),
+  "featuredNote": zod.string(),
+  "theme": zod.enum(['rose', 'sage', 'sky', 'lavender', 'butter', 'navy']).describe('Color palette for the invitation'),
+  "belongTeamLabel": zod.string().max(updateEventBodyBelongTeamLabelMax).describe('Label for the team field on the RSVP form; empty hides the field'),
+  "messageLabel": zod.string().max(updateEventBodyMessageLabelMax).describe('Heading for the RSVP form\'s message box; empty hides the box'),
+  "messagePlaceholder": zod.string().max(updateEventBodyMessagePlaceholderMax)
+})
+
+export const updateEventResponseBelongTeamLabelMax = 30;
+
+export const updateEventResponseMessageLabelMax = 30;
+
+export const updateEventResponseMessagePlaceholderMax = 100;
+
+
+
+export const UpdateEventResponse = zod.object({
+  "id": zod.number().int(),
+  "title": zod.string(),
+  "subtitle": zod.string(),
+  "description": zod.string(),
+  "date": zod.coerce.date(),
+  "startTime": zod.string(),
+  "endTime": zod.string(),
+  "timezone": zod.string(),
+  "venue": zod.string(),
+  "address": zod.string(),
+  "dressCode": zod.string(),
+  "hostName": zod.string(),
+  "capacity": zod.number().int(),
+  "imageUrl": zod.string(),
+  "featuredNote": zod.string(),
+  "theme": zod.enum(['rose', 'sage', 'sky', 'lavender', 'butter', 'navy']).describe('Color palette for the invitation'),
+  "belongTeamLabel": zod.string().max(updateEventResponseBelongTeamLabelMax).describe('Label for the team field on the RSVP form; empty hides the field'),
+  "messageLabel": zod.string().max(updateEventResponseMessageLabelMax).describe('Heading for the RSVP form\'s message box; empty hides the box'),
+  "messagePlaceholder": zod.string().max(updateEventResponseMessagePlaceholderMax)
+})
+
+
+/**
+ * Exchanges the admin password for a short-lived token
+ * @summary Sign in as admin
+ */
+export const AdminLoginBody = zod.object({
+  "password": zod.string()
+})
+
+export const AdminLoginResponse = zod.object({
+  "token": zod.string(),
+  "expiresAt": zod.coerce.date()
+})
+
+
+/**
+ * Returns RSVP responses for the event (admin only)
  * @summary List RSVP responses
  */
+export const listRsvpsResponseChildrenItemNameMax = 50;
+
+export const listRsvpsResponseChildrenItemAgeMin = 0;
+export const listRsvpsResponseChildrenItemAgeMax = 30;
+
+
+
 export const ListRsvpsResponseItem = zod.object({
   "id": zod.number().int(),
-  "eventId": zod.number().int(),
   "name": zod.string(),
-  "email": zod.string().email(),
-  "attendance": zod.enum(['attending', 'declined']),
+  "fatherName": zod.string(),
+  "motherName": zod.string(),
+  "phoneNumber": zod.string().nullable(),
+  "belongTeam": zod.string().nullable(),
+  "email": zod.string().nullable(),
+  "children": zod.array(zod.object({
+  "name": zod.string().min(1).max(listRsvpsResponseChildrenItemNameMax),
+  "age": zod.number().int().min(listRsvpsResponseChildrenItemAgeMin).max(listRsvpsResponseChildrenItemAgeMax)
+})),
+  "adultCount": zod.number().int(),
+  "childCount": zod.number().int(),
   "guestCount": zod.number().int(),
-  "mealPreference": zod.enum(['noPreference', 'vegetarian', 'vegan', 'glutenFree']),
-  "dietaryNotes": zod.string().nullable(),
   "message": zod.string().nullable(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
+  "createdAt": zod.coerce.date()
+}).describe('Full RSVP record, admin only')
 export const ListRsvpsResponse = zod.array(ListRsvpsResponseItem)
 
 
 /**
- * Creates or updates a guest's RSVP for the event
+ * Registers a family for the event
  * @summary Submit an RSVP
  */
+export const createRsvpBodyFatherNameMax = 50;
 
-export const createRsvpBodyGuestCountMin = 0;
-export const createRsvpBodyGuestCountMax = 5;
+export const createRsvpBodyMotherNameMax = 50;
+
+export const createRsvpBodyPhoneNumberMax = 30;
+
+export const createRsvpBodyBelongTeamMax = 50;
+
+export const createRsvpBodyChildrenItemNameMax = 50;
+
+export const createRsvpBodyChildrenItemAgeMin = 0;
+export const createRsvpBodyChildrenItemAgeMax = 30;
+
+export const createRsvpBodyChildrenMax = 10;
+
+export const createRsvpBodyMessageMax = 500;
 
 
 
 export const CreateRsvpBody = zod.object({
-  "name": zod.string().min(1),
-  "email": zod.string().email(),
-  "attendance": zod.enum(['attending', 'declined']),
-  "guestCount": zod.number().int().min(createRsvpBodyGuestCountMin).max(createRsvpBodyGuestCountMax),
-  "mealPreference": zod.enum(['noPreference', 'vegetarian', 'vegan', 'glutenFree']),
-  "dietaryNotes": zod.string().nullish(),
-  "message": zod.string().nullish()
+  "fatherName": zod.string().max(createRsvpBodyFatherNameMax),
+  "motherName": zod.string().max(createRsvpBodyMotherNameMax),
+  "phoneNumber": zod.string().max(createRsvpBodyPhoneNumberMax).nullish(),
+  "belongTeam": zod.string().max(createRsvpBodyBelongTeamMax).nullish(),
+  "children": zod.array(zod.object({
+  "name": zod.string().min(1).max(createRsvpBodyChildrenItemNameMax),
+  "age": zod.number().int().min(createRsvpBodyChildrenItemAgeMin).max(createRsvpBodyChildrenItemAgeMax)
+})).max(createRsvpBodyChildrenMax),
+  "message": zod.string().max(createRsvpBodyMessageMax).nullish()
 })
 
+export const createRsvpResponseChildrenItemNameMax = 50;
+
+export const createRsvpResponseChildrenItemAgeMin = 0;
+export const createRsvpResponseChildrenItemAgeMax = 30;
+
+
+
 export const CreateRsvpResponse = zod.object({
-  "id": zod.number().int(),
-  "eventId": zod.number().int(),
-  "name": zod.string(),
-  "email": zod.string().email(),
-  "attendance": zod.enum(['attending', 'declined']),
-  "guestCount": zod.number().int(),
-  "mealPreference": zod.enum(['noPreference', 'vegetarian', 'vegan', 'glutenFree']),
-  "dietaryNotes": zod.string().nullable(),
+  "confirmToken": zod.string(),
+  "fatherName": zod.string(),
+  "motherName": zod.string(),
+  "phoneNumberMasked": zod.string(),
+  "belongTeam": zod.string().nullable(),
+  "children": zod.array(zod.object({
+  "name": zod.string().min(1).max(createRsvpResponseChildrenItemNameMax),
+  "age": zod.number().int().min(createRsvpResponseChildrenItemAgeMin).max(createRsvpResponseChildrenItemAgeMax)
+})),
+  "adultCount": zod.number().int(),
+  "childCount": zod.number().int(),
+  "totalMembers": zod.number().int(),
   "message": zod.string().nullable(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
+  "createdAt": zod.coerce.date()
+}).describe('What a family (or anyone with the lookup name) can see; the phone number is masked')
+
+
+/**
+ * Matches a whole name (father, mother or child), ignoring case and spaces
+ * @summary Find RSVPs by a family member's name
+ */
+export const lookupRsvpsBodyNameMax = 50;
+
+
+
+export const LookupRsvpsBody = zod.object({
+  "name": zod.string().min(1).max(lookupRsvpsBodyNameMax)
 })
+
+export const lookupRsvpsResponseChildrenItemNameMax = 50;
+
+export const lookupRsvpsResponseChildrenItemAgeMin = 0;
+export const lookupRsvpsResponseChildrenItemAgeMax = 30;
+
+
+
+export const LookupRsvpsResponseItem = zod.object({
+  "confirmToken": zod.string(),
+  "fatherName": zod.string(),
+  "motherName": zod.string(),
+  "phoneNumberMasked": zod.string(),
+  "belongTeam": zod.string().nullable(),
+  "children": zod.array(zod.object({
+  "name": zod.string().min(1).max(lookupRsvpsResponseChildrenItemNameMax),
+  "age": zod.number().int().min(lookupRsvpsResponseChildrenItemAgeMin).max(lookupRsvpsResponseChildrenItemAgeMax)
+})),
+  "adultCount": zod.number().int(),
+  "childCount": zod.number().int(),
+  "totalMembers": zod.number().int(),
+  "message": zod.string().nullable(),
+  "createdAt": zod.coerce.date()
+}).describe('What a family (or anyone with the lookup name) can see; the phone number is masked')
+export const LookupRsvpsResponse = zod.array(LookupRsvpsResponseItem)
+
+
+/**
+ * @summary Get a family's RSVP by its private link token
+ */
+export const GetRsvpConfirmationParams = zod.object({
+  "token": zod.coerce.string()
+})
+
+export const getRsvpConfirmationResponseChildrenItemNameMax = 50;
+
+export const getRsvpConfirmationResponseChildrenItemAgeMin = 0;
+export const getRsvpConfirmationResponseChildrenItemAgeMax = 30;
+
+
+
+export const GetRsvpConfirmationResponse = zod.object({
+  "confirmToken": zod.string(),
+  "fatherName": zod.string(),
+  "motherName": zod.string(),
+  "phoneNumberMasked": zod.string(),
+  "belongTeam": zod.string().nullable(),
+  "children": zod.array(zod.object({
+  "name": zod.string().min(1).max(getRsvpConfirmationResponseChildrenItemNameMax),
+  "age": zod.number().int().min(getRsvpConfirmationResponseChildrenItemAgeMin).max(getRsvpConfirmationResponseChildrenItemAgeMax)
+})),
+  "adultCount": zod.number().int(),
+  "childCount": zod.number().int(),
+  "totalMembers": zod.number().int(),
+  "message": zod.string().nullable(),
+  "createdAt": zod.coerce.date()
+}).describe('What a family (or anyone with the lookup name) can see; the phone number is masked')
 
 
 /**
@@ -104,6 +306,8 @@ export const GetRsvpSummaryResponse = zod.object({
   "attendingResponses": zod.number().int(),
   "declinedResponses": zod.number().int(),
   "totalGuests": zod.number().int(),
+  "totalAdults": zod.number().int(),
+  "totalChildren": zod.number().int(),
   "capacity": zod.number().int(),
   "spotsRemaining": zod.number().int()
 })

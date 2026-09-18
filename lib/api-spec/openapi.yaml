@@ -12,6 +12,8 @@ tags:
     description: Health operations
   - name: event
     description: Event details and RSVP operations
+  - name: admin
+    description: Admin authentication
 paths:
   /healthz:
     get:
@@ -39,12 +41,71 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Event"
+    put:
+      operationId: updateEvent
+      tags: [event]
+      summary: Update event details
+      description: Replaces the event details (admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventInput"
+      responses:
+        "200":
+          description: Updated event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+        "400":
+          description: Invalid event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Not signed in as admin
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/login:
+    post:
+      operationId: adminLogin
+      tags: [admin]
+      summary: Sign in as admin
+      description: Exchanges the admin password for a short-lived token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminLoginInput"
+      responses:
+        "200":
+          description: Signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSession"
+        "401":
+          description: Wrong password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /rsvps:
     get:
       operationId: listRsvps
       tags: [event]
       summary: List RSVP responses
-      description: Returns RSVP responses for the event
+      description: Returns RSVP responses for the event (admin only)
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: RSVP responses
@@ -58,7 +119,7 @@ paths:
       operationId: createRsvp
       tags: [event]
       summary: Submit an RSVP
-      description: Creates or updates a guest's RSVP for the event
+      description: Registers a family for the event
       requestBody:
         required: true
         content:
@@ -71,9 +132,66 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Rsvp"
+                $ref: "#/components/schemas/RsvpPublic"
         "400":
           description: Invalid RSVP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /rsvps/lookup:
+    post:
+      operationId: lookupRsvps
+      tags: [event]
+      summary: Find RSVPs by a family member's name
+      description: Matches a whole name (father, mother or child), ignoring case and spaces
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RsvpLookupInput"
+      responses:
+        "200":
+          description: Matching families
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RsvpPublic"
+        "400":
+          description: Invalid name
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Too many lookups
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /rsvps/confirmation/{token}:
+    get:
+      operationId: getRsvpConfirmation
+      tags: [event]
+      summary: Get a family's RSVP by its private link token
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Saved RSVP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RsvpPublic"
+        "404":
+          description: Unknown token
           content:
             application/json:
               schema:
@@ -92,7 +210,102 @@ paths:
               schema:
                 $ref: "#/components/schemas/RsvpSummary"
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
   schemas:
+    EventTheme:
+      type: string
+      description: Color palette for the invitation
+      enum: [rose, sage, sky, lavender, butter, navy]
+    AdminLoginInput:
+      type: object
+      properties:
+        password:
+          type: string
+      required:
+        - password
+    AdminSession:
+      type: object
+      properties:
+        token:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+      required:
+        - token
+        - expiresAt
+    EventInput:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+        subtitle:
+          type: string
+        description:
+          type: string
+        date:
+          type: string
+          format: date
+        startTime:
+          type: string
+          pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+        endTime:
+          type: string
+          description: Empty when the invitation shows only a start time
+          pattern: "^(([01][0-9]|2[0-3]):[0-5][0-9])?$"
+        timezone:
+          type: string
+        venue:
+          type: string
+        address:
+          type: string
+        dressCode:
+          type: string
+        hostName:
+          type: string
+        capacity:
+          type: integer
+          minimum: 0
+        imageUrl:
+          type: string
+        featuredNote:
+          type: string
+        theme:
+          $ref: "#/components/schemas/EventTheme"
+        belongTeamLabel:
+          type: string
+          maxLength: 30
+          description: Label for the team field on the RSVP form; empty hides the field
+        messageLabel:
+          type: string
+          maxLength: 30
+          description: Heading for the RSVP form's message box; empty hides the box
+        messagePlaceholder:
+          type: string
+          maxLength: 100
+      required:
+        - title
+        - subtitle
+        - description
+        - date
+        - startTime
+        - endTime
+        - timezone
+        - venue
+        - address
+        - dressCode
+        - hostName
+        - capacity
+        - imageUrl
+        - featuredNote
+        - theme
+        - belongTeamLabel
+        - messageLabel
+        - messagePlaceholder
     HealthStatus:
       type: object
       properties:
@@ -134,6 +347,19 @@ components:
           type: string
         featuredNote:
           type: string
+        theme:
+          $ref: "#/components/schemas/EventTheme"
+        belongTeamLabel:
+          type: string
+          maxLength: 30
+          description: Label for the team field on the RSVP form; empty hides the field
+        messageLabel:
+          type: string
+          maxLength: 30
+          description: Heading for the RSVP form's message box; empty hides the box
+        messagePlaceholder:
+          type: string
+          maxLength: 100
       required:
         - id
         - title
@@ -150,77 +376,148 @@ components:
         - capacity
         - imageUrl
         - featuredNote
-    Rsvp:
-      type: object
-      properties:
-        id:
-          type: integer
-        eventId:
-          type: integer
-        name:
-          type: string
-        email:
-          type: string
-          format: email
-        attendance:
-          type: string
-          enum: [attending, declined]
-        guestCount:
-          type: integer
-        mealPreference:
-          type: string
-          enum: [noPreference, vegetarian, vegan, glutenFree]
-        dietaryNotes:
-          type: ["string", "null"]
-        message:
-          type: ["string", "null"]
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-      required:
-        - id
-        - eventId
-        - name
-        - email
-        - attendance
-        - guestCount
-        - mealPreference
-        - dietaryNotes
-        - message
-        - createdAt
-        - updatedAt
-    RsvpInput:
+        - theme
+        - belongTeamLabel
+        - messageLabel
+        - messagePlaceholder
+    RsvpChild:
       type: object
       properties:
         name:
           type: string
           minLength: 1
-        email:
-          type: string
-          format: email
-        attendance:
-          type: string
-          enum: [attending, declined]
-        guestCount:
+          maxLength: 50
+        age:
           type: integer
           minimum: 0
-          maximum: 5
-        mealPreference:
-          type: string
-          enum: [noPreference, vegetarian, vegan, glutenFree]
-        dietaryNotes:
-          type: ["string", "null"]
-        message:
-          type: ["string", "null"]
+          maximum: 30
       required:
         - name
+        - age
+    RsvpPublic:
+      type: object
+      description: What a family (or anyone with the lookup name) can see; the phone number is masked
+      properties:
+        confirmToken:
+          type: string
+        fatherName:
+          type: string
+        motherName:
+          type: string
+        phoneNumberMasked:
+          type: string
+        belongTeam:
+          type: ["string", "null"]
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/RsvpChild"
+        adultCount:
+          type: integer
+        childCount:
+          type: integer
+        totalMembers:
+          type: integer
+        message:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - confirmToken
+        - fatherName
+        - motherName
+        - phoneNumberMasked
+        - belongTeam
+        - children
+        - adultCount
+        - childCount
+        - totalMembers
+        - message
+        - createdAt
+    Rsvp:
+      type: object
+      description: Full RSVP record, admin only
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        fatherName:
+          type: string
+        motherName:
+          type: string
+        phoneNumber:
+          type: ["string", "null"]
+        belongTeam:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/RsvpChild"
+        adultCount:
+          type: integer
+        childCount:
+          type: integer
+        guestCount:
+          type: integer
+        message:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - fatherName
+        - motherName
+        - phoneNumber
+        - belongTeam
         - email
-        - attendance
+        - children
+        - adultCount
+        - childCount
         - guestCount
-        - mealPreference
+        - message
+        - createdAt
+    RsvpInput:
+      type: object
+      properties:
+        fatherName:
+          type: string
+          maxLength: 50
+        motherName:
+          type: string
+          maxLength: 50
+        phoneNumber:
+          type: ["string", "null"]
+          maxLength: 30
+        belongTeam:
+          type: ["string", "null"]
+          maxLength: 50
+        children:
+          type: array
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/RsvpChild"
+        message:
+          type: ["string", "null"]
+          maxLength: 500
+      required:
+        - fatherName
+        - motherName
+        - children
+    RsvpLookupInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+      required:
+        - name
     RsvpSummary:
       type: object
       properties:
@@ -232,6 +529,10 @@ components:
           type: integer
         totalGuests:
           type: integer
+        totalAdults:
+          type: integer
+        totalChildren:
+          type: integer
         capacity:
           type: integer
         spotsRemaining:
@@ -241,6 +542,8 @@ components:
         - attendingResponses
         - declinedResponses
         - totalGuests
+        - totalAdults
+        - totalChildren
         - capacity
         - spotsRemaining
     Error:

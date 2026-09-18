@@ -7,19 +7,25 @@
  */
 import type { EventTheme } from './eventTheme';
 
-export interface Event {
-  id: number;
+export interface EventInput {
+  /** @minLength 1 */
   title: string;
   subtitle: string;
   description: string;
   date: Date;
+  /** @pattern ^([01][0-9]|2[0-3]):[0-5][0-9]$ */
   startTime: string;
+  /**
+     * Empty when the invitation shows only a start time
+     * @pattern ^(([01][0-9]|2[0-3]):[0-5][0-9])?$
+     */
   endTime: string;
   timezone: string;
   venue: string;
   address: string;
   dressCode: string;
   hostName: string;
+  /** @minimum 0 */
   capacity: number;
   imageUrl: string;
   featuredNote: string;

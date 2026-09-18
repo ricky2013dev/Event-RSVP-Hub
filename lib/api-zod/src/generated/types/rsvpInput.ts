@@ -5,22 +5,28 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { RsvpInputAttendance } from './rsvpInputAttendance';
-import type { RsvpInputMealPreference } from './rsvpInputMealPreference';
+import type { RsvpChild } from './rsvpChild';
 
 export interface RsvpInput {
-  /** @minLength 1 */
-  name: string;
-  email: string;
-  attendance: RsvpInputAttendance;
+  /** @maxLength 50 */
+  fatherName: string;
+  /** @maxLength 50 */
+  motherName: string;
   /**
-     * @minimum 0
-     * @maximum 5
+     * @maxLength 30
+     * @nullable
      */
-  guestCount: number;
-  mealPreference: RsvpInputMealPreference;
-  /** @nullable */
-  dietaryNotes?: string | null;
-  /** @nullable */
+  phoneNumber?: string | null;
+  /**
+     * @maxLength 50
+     * @nullable
+     */
+  belongTeam?: string | null;
+  /** @maxItems 10 */
+  children: RsvpChild[];
+  /**
+     * @maxLength 500
+     * @nullable
+     */
   message?: string | null;
 }

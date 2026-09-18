@@ -20,11 +20,16 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AdminLoginInput,
+  AdminSession,
   Error,
   Event,
+  EventInput,
   HealthStatus,
   Rsvp,
   RsvpInput,
+  RsvpLookupInput,
+  RsvpPublic,
   RsvpSummary
 } from './api.schemas';
 
@@ -211,6 +216,184 @@ export function useGetEvent<TData = Awaited<ReturnType<typeof getEvent>>, TError
 
 
 
+export const getUpdateEventUrl = () => {
+
+
+
+
+  return `/api/event`
+}
+
+/**
+ * Replaces the event details (admin only)
+ * @summary Update event details
+ */
+export const updateEvent = async (eventInput: EventInput, options?: Parameters<typeof customFetch>[1]): Promise<Event> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Event>(getUpdateEventUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(eventInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateEventMutationKey = () => ['updateEvent'] as const;
+
+export const getUpdateEventMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateEvent>>, TError,UpdateEventMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateEvent>>, TError,UpdateEventMutationVariables, TContext> => {
+
+const mutationKey = getUpdateEventMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateEvent>>, UpdateEventMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateEvent(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateEventMutationResult = NonNullable<Awaited<ReturnType<typeof updateEvent>>>
+    export type UpdateEventMutationBody = BodyType<EventInput>
+    export type UpdateEventMutationError = ErrorType<Error>
+    export type UpdateEventMutationVariables = {data: BodyType<EventInput>}
+
+    /**
+ * @summary Update event details
+ */
+export const useUpdateEvent = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateEvent>>, TError,UpdateEventMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateEvent>>,
+        TError,
+        UpdateEventMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateEventMutationOptions(options));
+    }
+
+export const getAdminLoginUrl = () => {
+
+
+
+
+  return `/api/admin/login`
+}
+
+/**
+ * Exchanges the admin password for a short-lived token
+ * @summary Sign in as admin
+ */
+export const adminLogin = async (adminLoginInput: AdminLoginInput, options?: Parameters<typeof customFetch>[1]): Promise<AdminSession> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<AdminSession>(getAdminLoginUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(adminLoginInput)
+  }
+);}
+
+
+
+
+
+export const getAdminLoginMutationKey = () => ['adminLogin'] as const;
+
+export const getAdminLoginMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminLogin>>, TError,AdminLoginMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminLogin>>, TError,AdminLoginMutationVariables, TContext> => {
+
+const mutationKey = getAdminLoginMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminLogin>>, AdminLoginMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminLogin(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminLoginMutationResult = NonNullable<Awaited<ReturnType<typeof adminLogin>>>
+    export type AdminLoginMutationBody = BodyType<AdminLoginInput>
+    export type AdminLoginMutationError = ErrorType<Error>
+    export type AdminLoginMutationVariables = {data: BodyType<AdminLoginInput>}
+
+    /**
+ * @summary Sign in as admin
+ */
+export const useAdminLogin = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminLogin>>, TError,AdminLoginMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminLogin>>,
+        TError,
+        AdminLoginMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAdminLoginMutationOptions(options));
+    }
+
 export const getListRsvpsUrl = () => {
 
 
@@ -220,7 +403,7 @@ export const getListRsvpsUrl = () => {
 }
 
 /**
- * Returns RSVP responses for the event
+ * Returns RSVP responses for the event (admin only)
  * @summary List RSVP responses
  */
 export const listRsvps = async ( options?: Parameters<typeof customFetch>[1]): Promise<Rsvp[]> => {
@@ -298,10 +481,10 @@ export const getCreateRsvpUrl = () => {
 }
 
 /**
- * Creates or updates a guest's RSVP for the event
+ * Registers a family for the event
  * @summary Submit an RSVP
  */
-export const createRsvp = async (rsvpInput: RsvpInput, options?: Parameters<typeof customFetch>[1]): Promise<Rsvp> => {
+export const createRsvp = async (rsvpInput: RsvpInput, options?: Parameters<typeof customFetch>[1]): Promise<RsvpPublic> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -317,7 +500,7 @@ export const createRsvp = async (rsvpInput: RsvpInput, options?: Parameters<type
     }
     return headers;
   };
-return customFetch<Rsvp>(getCreateRsvpUrl(),
+return customFetch<RsvpPublic>(getCreateRsvpUrl(),
   {
     ...options,
     method: 'POST',
@@ -377,6 +560,172 @@ export const useCreateRsvp = <TError = ErrorType<Error>,
       > => {
       return useMutation(getCreateRsvpMutationOptions(options));
     }
+
+export const getLookupRsvpsUrl = () => {
+
+
+
+
+  return `/api/rsvps/lookup`
+}
+
+/**
+ * Matches a whole name (father, mother or child), ignoring case and spaces
+ * @summary Find RSVPs by a family member's name
+ */
+export const lookupRsvps = async (rsvpLookupInput: RsvpLookupInput, options?: Parameters<typeof customFetch>[1]): Promise<RsvpPublic[]> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<RsvpPublic[]>(getLookupRsvpsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(rsvpLookupInput)
+  }
+);}
+
+
+
+
+
+export const getLookupRsvpsMutationKey = () => ['lookupRsvps'] as const;
+
+export const getLookupRsvpsMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof lookupRsvps>>, TError,LookupRsvpsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof lookupRsvps>>, TError,LookupRsvpsMutationVariables, TContext> => {
+
+const mutationKey = getLookupRsvpsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof lookupRsvps>>, LookupRsvpsMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  lookupRsvps(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LookupRsvpsMutationResult = NonNullable<Awaited<ReturnType<typeof lookupRsvps>>>
+    export type LookupRsvpsMutationBody = BodyType<RsvpLookupInput>
+    export type LookupRsvpsMutationError = ErrorType<Error>
+    export type LookupRsvpsMutationVariables = {data: BodyType<RsvpLookupInput>}
+
+    /**
+ * @summary Find RSVPs by a family member's name
+ */
+export const useLookupRsvps = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof lookupRsvps>>, TError,LookupRsvpsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof lookupRsvps>>,
+        TError,
+        LookupRsvpsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getLookupRsvpsMutationOptions(options));
+    }
+
+export const getGetRsvpConfirmationUrl = (token: string,) => {
+
+
+
+
+  return `/api/rsvps/confirmation/${token}`
+}
+
+/**
+ * @summary Get a family's RSVP by its private link token
+ */
+export const getRsvpConfirmation = async (token: string, options?: Parameters<typeof customFetch>[1]): Promise<RsvpPublic> => {
+
+  return customFetch<RsvpPublic>(getGetRsvpConfirmationUrl(token),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetRsvpConfirmationQueryKey = (token: string,) => {
+    return [
+    `/api/rsvps/confirmation/${token}`
+    ] as const;
+    }
+
+
+export const getGetRsvpConfirmationQueryOptions = <TData = Awaited<ReturnType<typeof getRsvpConfirmation>>, TError = ErrorType<Error>>(token: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRsvpConfirmation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRsvpConfirmationQueryKey(token);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRsvpConfirmation>>> = ({ signal }) => getRsvpConfirmation(token, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: token !== null && token !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRsvpConfirmation>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetRsvpConfirmationQueryResult = NonNullable<Awaited<ReturnType<typeof getRsvpConfirmation>>>
+export type GetRsvpConfirmationQueryError = ErrorType<Error>
+
+
+/**
+ * @summary Get a family's RSVP by its private link token
+ */
+
+export function useGetRsvpConfirmation<TData = Awaited<ReturnType<typeof getRsvpConfirmation>>, TError = ErrorType<Error>>(
+ token: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRsvpConfirmation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetRsvpConfirmationQueryOptions(token,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetRsvpSummaryUrl = () => {
 

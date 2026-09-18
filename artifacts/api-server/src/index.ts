@@ -1,7 +1,8 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 
-const rawPort = process.env["PORT"];
+// Replit injects PORT; locally fall back to API_PORT from .env
+const rawPort = process.env["PORT"] ?? process.env["API_PORT"] ?? "8080";
 
 if (!rawPort) {
   throw new Error(

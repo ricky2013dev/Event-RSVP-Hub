@@ -5,6 +5,67 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+/**
+ * Color palette for the invitation
+ */
+export type EventTheme = typeof EventTheme[keyof typeof EventTheme];
+
+
+export const EventTheme = {
+  rose: 'rose',
+  sage: 'sage',
+  sky: 'sky',
+  lavender: 'lavender',
+  butter: 'butter',
+  navy: 'navy',
+} as const;
+
+export interface AdminLoginInput {
+  password: string;
+}
+
+export interface AdminSession {
+  token: string;
+  expiresAt: string;
+}
+
+export interface EventInput {
+  /** @minLength 1 */
+  title: string;
+  subtitle: string;
+  description: string;
+  date: string;
+  /** @pattern ^([01][0-9]|2[0-3]):[0-5][0-9]$ */
+  startTime: string;
+  /**
+     * Empty when the invitation shows only a start time
+     * @pattern ^(([01][0-9]|2[0-3]):[0-5][0-9])?$
+     */
+  endTime: string;
+  timezone: string;
+  venue: string;
+  address: string;
+  dressCode: string;
+  hostName: string;
+  /** @minimum 0 */
+  capacity: number;
+  imageUrl: string;
+  featuredNote: string;
+  theme: EventTheme;
+  /**
+     * Label for the team field on the RSVP form; empty hides the field
+     * @maxLength 30
+     */
+  belongTeamLabel: string;
+  /**
+     * Heading for the RSVP form's message box; empty hides the box
+     * @maxLength 30
+     */
+  messageLabel: string;
+  /** @maxLength 100 */
+  messagePlaceholder: string;
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -25,75 +86,106 @@ export interface Event {
   capacity: number;
   imageUrl: string;
   featuredNote: string;
+  theme: EventTheme;
+  /**
+     * Label for the team field on the RSVP form; empty hides the field
+     * @maxLength 30
+     */
+  belongTeamLabel: string;
+  /**
+     * Heading for the RSVP form's message box; empty hides the box
+     * @maxLength 30
+     */
+  messageLabel: string;
+  /** @maxLength 100 */
+  messagePlaceholder: string;
 }
 
-export type RsvpAttendance = typeof RsvpAttendance[keyof typeof RsvpAttendance];
-
-
-export const RsvpAttendance = {
-  attending: 'attending',
-  declined: 'declined',
-} as const;
-
-export type RsvpMealPreference = typeof RsvpMealPreference[keyof typeof RsvpMealPreference];
-
-
-export const RsvpMealPreference = {
-  noPreference: 'noPreference',
-  vegetarian: 'vegetarian',
-  vegan: 'vegan',
-  glutenFree: 'glutenFree',
-} as const;
-
-export interface Rsvp {
-  id: number;
-  eventId: number;
+export interface RsvpChild {
+  /**
+     * @minLength 1
+     * @maxLength 50
+     */
   name: string;
-  email: string;
-  attendance: RsvpAttendance;
-  guestCount: number;
-  mealPreference: RsvpMealPreference;
+  /**
+     * @minimum 0
+     * @maximum 30
+     */
+  age: number;
+}
+
+/**
+ * What a family (or anyone with the lookup name) can see; the phone number is masked
+ */
+export interface RsvpPublic {
+  confirmToken: string;
+  fatherName: string;
+  motherName: string;
+  phoneNumberMasked: string;
   /** @nullable */
-  dietaryNotes: string | null;
+  belongTeam: string | null;
+  children: RsvpChild[];
+  adultCount: number;
+  childCount: number;
+  totalMembers: number;
   /** @nullable */
   message: string | null;
   createdAt: string;
-  updatedAt: string;
 }
 
-export type RsvpInputAttendance = typeof RsvpInputAttendance[keyof typeof RsvpInputAttendance];
-
-
-export const RsvpInputAttendance = {
-  attending: 'attending',
-  declined: 'declined',
-} as const;
-
-export type RsvpInputMealPreference = typeof RsvpInputMealPreference[keyof typeof RsvpInputMealPreference];
-
-
-export const RsvpInputMealPreference = {
-  noPreference: 'noPreference',
-  vegetarian: 'vegetarian',
-  vegan: 'vegan',
-  glutenFree: 'glutenFree',
-} as const;
+/**
+ * Full RSVP record, admin only
+ */
+export interface Rsvp {
+  id: number;
+  name: string;
+  fatherName: string;
+  motherName: string;
+  /** @nullable */
+  phoneNumber: string | null;
+  /** @nullable */
+  belongTeam: string | null;
+  /** @nullable */
+  email: string | null;
+  children: RsvpChild[];
+  adultCount: number;
+  childCount: number;
+  guestCount: number;
+  /** @nullable */
+  message: string | null;
+  createdAt: string;
+}
 
 export interface RsvpInput {
-  /** @minLength 1 */
-  name: string;
-  email: string;
-  attendance: RsvpInputAttendance;
+  /** @maxLength 50 */
+  fatherName: string;
+  /** @maxLength 50 */
+  motherName: string;
   /**
-     * @minimum 0
-     * @maximum 5
+     * @maxLength 30
+     * @nullable
      */
-  guestCount: number;
-  mealPreference: RsvpInputMealPreference;
-  /** @nullable */
-  dietaryNotes?: string | null;
-  /** @nullable */
+  phoneNumber?: string | null;
+  /**
+     * @maxLength 50
+     * @nullable
+     */
+  belongTeam?: string | null;
+  /** @maxItems 10 */
+  children: RsvpChild[];
+  /**
+     * @maxLength 500
+     * @nullable
+     */
   message?: string | null;
+}
+
+export interface RsvpLookupInput {
+  /**
+     * @minLength 1
+     * @maxLength 50
+     */
+  name: string;
 }
 
 export interface RsvpSummary {
@@ -101,6 +193,8 @@ export interface RsvpSummary {
   attendingResponses: number;
   declinedResponses: number;
   totalGuests: number;
+  totalAdults: number;
+  totalChildren: number;
   capacity: number;
   spotsRemaining: number;
 }

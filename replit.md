@@ -9,7 +9,16 @@ _Replace the heading above with the project's name, and this line with one sente
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Required env: `DATABASE_URL` — Postgres connection string; `ADMIN_PASSWORD` — password for `/admin` (server-only)
+
+## Local development (macOS)
+
+- `cp .env.example .env` — env for API, drizzle-kit and Vite (`DATABASE_URL`, `API_PORT`, `WEB_PORT`, `BASE_PATH`)
+- `pnpm install`
+- `pnpm db:up` — start local Postgres in Docker (same `postgres`/`password`/`heliumdb` credentials as Replit)
+- `pnpm db:push` — create tables
+- `pnpm dev` — API on :8080 + web on :5173 (Vite proxies `/api` to the API)
+- The Replit DB host `helium` only resolves inside Replit; it can't be reached from a local machine
 
 ## Stack
 

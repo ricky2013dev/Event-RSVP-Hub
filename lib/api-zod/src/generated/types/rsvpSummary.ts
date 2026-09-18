@@ -11,6 +11,8 @@ export interface RsvpSummary {
   attendingResponses: number;
   declinedResponses: number;
   totalGuests: number;
+  totalAdults: number;
+  totalChildren: number;
   capacity: number;
   spotsRemaining: number;
 }

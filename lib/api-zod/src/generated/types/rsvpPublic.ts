@@ -8,23 +8,19 @@
 import type { RsvpChild } from './rsvpChild';
 
 /**
- * Full RSVP record, admin only
+ * What a family (or anyone with the lookup name) can see; the phone number is masked
  */
-export interface Rsvp {
-  id: number;
-  name: string;
+export interface RsvpPublic {
+  confirmToken: string;
   fatherName: string;
   motherName: string;
-  /** @nullable */
-  phoneNumber: string | null;
+  phoneNumberMasked: string;
   /** @nullable */
   belongTeam: string | null;
-  /** @nullable */
-  email: string | null;
   children: RsvpChild[];
   adultCount: number;
   childCount: number;
-  guestCount: number;
+  totalMembers: number;
   /** @nullable */
   message: string | null;
   createdAt: Date;

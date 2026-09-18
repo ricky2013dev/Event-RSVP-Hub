@@ -1,5 +1,11 @@
 import { defineConfig } from "drizzle-kit";
+import fs from "fs";
 import path from "path";
+
+const envFile = path.join(__dirname, "../../.env");
+if (fs.existsSync(envFile)) {
+  process.loadEnvFile(envFile);
+}
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL, ensure the database is provisioned");
