@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'wouter';
-import { ArrowLeft, Check, ClipboardList, Grid3x3, Home, ImageUp, LogOut, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Check, ClipboardList, Grid3x3, Home, ImageUp, LogOut, Palette, Plus, ScrollText, Trash2 } from 'lucide-react';
 import {
   ApiError,
   getGetEventQueryKey,
@@ -25,6 +25,16 @@ type TextField = Exclude<keyof EventInput, 'capacity' | 'theme' | 'cardStyle' | 
 
 // What the editor previews live, before anything is saved.
 type LookPreview = Pick<EventInput, 'theme' | 'cardStyle' | 'themeColor' | 'themeAccent'>;
+
+// The settings form is long, so it is split into panes; one save button covers them all.
+type SettingsPane = 'design' | 'invitation' | 'when' | 'rsvp';
+
+const SETTINGS_PANES: { id: SettingsPane; name: string; icon: typeof Palette }[] = [
+  { id: 'design', name: '디자인', icon: Palette },
+  { id: 'invitation', name: '초대장', icon: ScrollText },
+  { id: 'when', name: '일정 · 장소', icon: CalendarDays },
+  { id: 'rsvp', name: '접수', icon: ClipboardList },
+];
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
@@ -67,6 +77,7 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
   const updateEvent = useUpdateEvent();
   const [form, setForm] = useState<EventInput | null>(null);
   const [status, setStatus] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
+  const [pane, setPane] = useState<SettingsPane>('design');
 
   useEffect(() => {
     if (eventQuery.data && !form) setForm(toInput(eventQuery.data));
@@ -145,10 +156,17 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
 
   function save(formEvent: React.FormEvent<HTMLFormElement>) {
     formEvent.preventDefault();
-    if (!form!.title.trim()) return setStatus({ kind: 'error', text: '제목을 입력해 주세요.' });
-    if (!form!.date || !form!.startTime) return setStatus({ kind: 'error', text: '날짜와 시작 시간을 입력해 주세요.' });
+
+    // A field that fails is on a pane the user may not be looking at, so open it.
+    function reject(where: SettingsPane, text: string) {
+      setPane(where);
+      setStatus({ kind: 'error', text });
+    }
+
+    if (!form!.title.trim()) return reject('invitation', '제목을 입력해 주세요.');
+    if (!form!.date || !form!.startTime) return reject('when', '날짜와 시작 시간을 입력해 주세요.');
     if (form!.theme === 'custom' && !(HEX.test(form!.themeColor) && HEX.test(form!.themeAccent))) {
-      return setStatus({ kind: 'error', text: '직접 고른 색상은 #RRGGBB 형식이어야 해요.' });
+      return reject('design', '직접 고른 색상은 #RRGGBB 형식이어야 해요.');
     }
 
     // Blank rows are dropped; the rest must be complete and unique, or guests would see duplicates.
@@ -156,7 +174,7 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
       .map((option) => ({ value: option.value.trim() || option.label.trim(), label: option.label.trim() || option.value.trim() }))
       .filter((option) => option.value || option.label);
     if (new Set(options.map((option) => option.value)).size !== options.length) {
-      return setStatus({ kind: 'error', text: '소속 부서 선택지의 저장 값이 중복됐어요.' });
+      return reject('rsvp', '소속 부서 선택지의 저장 값이 중복됐어요.');
     }
 
     updateEvent.mutate(
@@ -187,6 +205,23 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
   return (
     <>
       <form className="admin-form" onSubmit={save} noValidate>
+        <div className="subtabs" role="tablist" aria-label="초대장 설정">
+          {SETTINGS_PANES.map(({ id, name, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={pane === id}
+              className={pane === id ? 'on' : ''}
+              onClick={() => setPane(id)}
+              data-testid={`subtab-${id}`}
+            >
+              <Icon size={16} /> {name}
+            </button>
+          ))}
+        </div>
+
+        {pane === 'design' && (<>
         <section className="admin-section">
           <h2>색상 테마 <span className="admin-muted">선택하면 바로 미리보기돼요 · 저장해야 초대장에 반영</span></h2>
           <div className="theme-grid" role="radiogroup" aria-label="색상 테마">
@@ -261,18 +296,60 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
         </section>
 
         <section className="admin-section">
+          <h2>사진</h2>
+          <div className="photo-edit">
+            <div className="photo-ring small">{form.imageUrl && <img src={form.imageUrl} alt="" />}</div>
+            <div className="photo-edit-actions">
+              <label className="btn btn-outline file-btn">
+                <ImageUp size={18} /> 사진 올리기
+                <input type="file" accept="image/*" onChange={(e) => void pickImage(e)} data-testid="input-event-image-file" />
+              </label>
+              <p className="admin-muted">또는 이미지 주소를 붙여넣으세요</p>
+            </div>
+          </div>
+          <label className="field">
+            <span>이미지 주소</span>
+            <input value={form.imageUrl.startsWith('data:') ? '(업로드한 사진)' : form.imageUrl} onChange={(e) => set('imageUrl', e.target.value)} onFocus={(e) => e.target.select()} data-testid="input-event-imageUrl" />
+          </label>
+        </section>
+        </>)}
+
+        {pane === 'invitation' && (<>
+        <section className="admin-section">
           <h2>초대장 문구</h2>
           {text('subtitle', '머리말', { hint: '제목 위 작은 글씨' })}
           {text('title', '제목', { hint: '뒤에 RSVP가 붙어요' })}
           {text('description', '인사말', { multiline: true })}
           {text('featuredNote', '추가 안내', { hint: '비워두면 표시 안 함', multiline: true })}
+          {text('hostName', '주최')}
         </section>
 
         <section className="admin-section">
           <h2>초대장 표시 <span className="admin-muted">손님에게 무엇까지 보여줄지 정해요</span></h2>
           {check('showSummary', '참석 현황 공개', '등록 가족 · 총 참석 예정 인원 · 어른/자녀 수를 초대장에 보여줘요')}
         </section>
+        </>)}
 
+        {pane === 'when' && (<>
+        <section className="admin-section">
+          <h2>날짜 · 시간</h2>
+          {text('date', '날짜', { type: 'date' })}
+          <div className="admin-row">
+            {text('startTime', '시작', { type: 'time' })}
+            {text('endTime', '종료', { type: 'time', hint: '선택' })}
+          </div>
+          {text('timezone', '시간대', { hint: '예: America/Chicago' })}
+        </section>
+
+        <section className="admin-section">
+          <h2>장소</h2>
+          {text('venue', '장소 이름')}
+          {text('address', '주소', { hint: '지도 링크에 사용돼요' })}
+          {text('dressCode', '복장 안내', { hint: '비워두면 표시 안 함' })}
+        </section>
+        </>)}
+
+        {pane === 'rsvp' && (<>
         <section className="admin-section">
           <h2>RSVP 양식 <span className="admin-muted">비워두면 그 항목은 양식에서 숨겨져요</span></h2>
           <div className="admin-row">
@@ -304,43 +381,7 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
         </section>
 
         <section className="admin-section">
-          <h2>사진</h2>
-          <div className="photo-edit">
-            <div className="photo-ring small">{form.imageUrl && <img src={form.imageUrl} alt="" />}</div>
-            <div className="photo-edit-actions">
-              <label className="btn btn-outline file-btn">
-                <ImageUp size={18} /> 사진 올리기
-                <input type="file" accept="image/*" onChange={(e) => void pickImage(e)} data-testid="input-event-image-file" />
-              </label>
-              <p className="admin-muted">또는 이미지 주소를 붙여넣으세요</p>
-            </div>
-          </div>
-          <label className="field">
-            <span>이미지 주소</span>
-            <input value={form.imageUrl.startsWith('data:') ? '(업로드한 사진)' : form.imageUrl} onChange={(e) => set('imageUrl', e.target.value)} onFocus={(e) => e.target.select()} data-testid="input-event-imageUrl" />
-          </label>
-        </section>
-
-        <section className="admin-section">
-          <h2>날짜 · 시간</h2>
-          {text('date', '날짜', { type: 'date' })}
-          <div className="admin-row">
-            {text('startTime', '시작', { type: 'time' })}
-            {text('endTime', '종료', { type: 'time', hint: '선택' })}
-          </div>
-          {text('timezone', '시간대', { hint: '예: America/Chicago' })}
-        </section>
-
-        <section className="admin-section">
-          <h2>장소</h2>
-          {text('venue', '장소 이름')}
-          {text('address', '주소', { hint: '지도 링크에 사용돼요' })}
-          {text('dressCode', '복장 안내', { hint: '비워두면 표시 안 함' })}
-        </section>
-
-        <section className="admin-section">
-          <h2>기타</h2>
-          {text('hostName', '주최')}
+          <h2>접수 규모</h2>
           <div className="admin-row">
             <label className="field">
               <span>최대 인원</span>
@@ -352,6 +393,7 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
             </label>
           </div>
         </section>
+        </>)}
 
         {status && <p className={status.kind === 'ok' ? 'notice' : 'error'} role="status" data-testid="status-admin-save">{status.kind === 'ok' && <Check size={16} />} {status.text}</p>}
         <button className="btn btn-primary sticky-save" type="submit" disabled={updateEvent.isPending} data-testid="button-save-event">{updateEvent.isPending ? '저장 중…' : '저장하기'}</button>
@@ -425,9 +467,9 @@ export default function AdminPage() {
 
   const tabs = (
     <div className="tabs" role="tablist">
-      <button type="button" role="tab" aria-selected={tab === 'reservations'} className={tab === 'reservations' ? 'on' : ''} onClick={() => selectTab('reservations')} data-testid="tab-reservations"><ClipboardList size={17} /> 예약 현황</button>
-      <button type="button" role="tab" aria-selected={tab === 'tables'} className={tab === 'tables' ? 'on' : ''} onClick={() => selectTab('tables')} data-testid="tab-tables"><Grid3x3 size={17} /> 테이블 배정</button>
-      <button type="button" role="tab" aria-selected={tab === 'settings'} className={tab === 'settings' ? 'on' : ''} onClick={() => selectTab('settings')} data-testid="tab-settings"><ImageUp size={17} /> 초대장 설정</button>
+      <button type="button" role="tab" aria-selected={tab === 'reservations'} className={tab === 'reservations' ? 'on' : ''} onClick={() => selectTab('reservations')} data-testid="tab-reservations"><ClipboardList size={17} />  현황</button>
+      <button type="button" role="tab" aria-selected={tab === 'tables'} className={tab === 'tables' ? 'on' : ''} onClick={() => selectTab('tables')} data-testid="tab-tables"><Grid3x3 size={17} /> 테이블</button>
+      <button type="button" role="tab" aria-selected={tab === 'settings'} className={tab === 'settings' ? 'on' : ''} onClick={() => selectTab('settings')} data-testid="tab-settings"><ImageUp size={17} /> 초대장</button>
     </div>
   );
 
