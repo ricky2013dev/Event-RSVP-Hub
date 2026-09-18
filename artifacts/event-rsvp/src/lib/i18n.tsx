@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-// The guest pages read in English by default and can be switched to Korean. The admin
+// The guest pages read in Korean by default and can be switched to English. The admin
 // pages are Korean only, so nothing under /admin uses any of this.
 export type Lang = 'en' | 'ko';
 
@@ -8,10 +8,10 @@ const STORAGE_KEY = 'rsvp-lang';
 
 function storedLang(): Lang {
   try {
-    return localStorage.getItem(STORAGE_KEY) === 'ko' ? 'ko' : 'en';
+    return localStorage.getItem(STORAGE_KEY) === 'en' ? 'en' : 'ko';
   } catch {
-    // Private windows and blocked site data throw here; English is the default anyway.
-    return 'en';
+    // Private windows and blocked site data throw here; Korean is the default anyway.
+    return 'ko';
   }
 }
 
@@ -224,7 +224,7 @@ export const LOCALE: Record<Lang, string> = { en: 'en-US', ko: 'ko-KR' };
 
 type LangValue = { lang: Lang; setLang: (lang: Lang) => void; t: typeof EN };
 
-const LangContext = createContext<LangValue>({ lang: 'en', setLang: () => {}, t: EN });
+const LangContext = createContext<LangValue>({ lang: 'ko', setLang: () => {}, t: KO });
 
 export function LangProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<Lang>(storedLang);
