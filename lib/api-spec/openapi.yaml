@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: event
+    description: Event details and RSVP operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,71 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /event:
+    get:
+      operationId: getEvent
+      tags: [event]
+      summary: Get event details
+      description: Returns the event currently accepting RSVPs
+      responses:
+        "200":
+          description: Event details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+  /rsvps:
+    get:
+      operationId: listRsvps
+      tags: [event]
+      summary: List RSVP responses
+      description: Returns RSVP responses for the event
+      responses:
+        "200":
+          description: RSVP responses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Rsvp"
+    post:
+      operationId: createRsvp
+      tags: [event]
+      summary: Submit an RSVP
+      description: Creates or updates a guest's RSVP for the event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RsvpInput"
+      responses:
+        "201":
+          description: Saved RSVP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rsvp"
+        "400":
+          description: Invalid RSVP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /rsvps/summary:
+    get:
+      operationId: getRsvpSummary
+      tags: [event]
+      summary: Get RSVP summary
+      description: Returns aggregate RSVP totals for the event
+      responses:
+        "200":
+          description: RSVP summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RsvpSummary"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +100,154 @@ components:
           type: string
       required:
         - status
+    Event:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        subtitle:
+          type: string
+        description:
+          type: string
+        date:
+          type: string
+          format: date
+        startTime:
+          type: string
+        endTime:
+          type: string
+        timezone:
+          type: string
+        venue:
+          type: string
+        address:
+          type: string
+        dressCode:
+          type: string
+        hostName:
+          type: string
+        capacity:
+          type: integer
+        imageUrl:
+          type: string
+        featuredNote:
+          type: string
+      required:
+        - id
+        - title
+        - subtitle
+        - description
+        - date
+        - startTime
+        - endTime
+        - timezone
+        - venue
+        - address
+        - dressCode
+        - hostName
+        - capacity
+        - imageUrl
+        - featuredNote
+    Rsvp:
+      type: object
+      properties:
+        id:
+          type: integer
+        eventId:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        attendance:
+          type: string
+          enum: [attending, declined]
+        guestCount:
+          type: integer
+        mealPreference:
+          type: string
+          enum: [noPreference, vegetarian, vegan, glutenFree]
+        dietaryNotes:
+          type: ["string", "null"]
+        message:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - eventId
+        - name
+        - email
+        - attendance
+        - guestCount
+        - mealPreference
+        - dietaryNotes
+        - message
+        - createdAt
+        - updatedAt
+    RsvpInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        attendance:
+          type: string
+          enum: [attending, declined]
+        guestCount:
+          type: integer
+          minimum: 0
+          maximum: 5
+        mealPreference:
+          type: string
+          enum: [noPreference, vegetarian, vegan, glutenFree]
+        dietaryNotes:
+          type: ["string", "null"]
+        message:
+          type: ["string", "null"]
+      required:
+        - name
+        - email
+        - attendance
+        - guestCount
+        - mealPreference
+    RsvpSummary:
+      type: object
+      properties:
+        totalResponses:
+          type: integer
+        attendingResponses:
+          type: integer
+        declinedResponses:
+          type: integer
+        totalGuests:
+          type: integer
+        capacity:
+          type: integer
+        spotsRemaining:
+          type: integer
+      required:
+        - totalResponses
+        - attendingResponses
+        - declinedResponses
+        - totalGuests
+        - capacity
+        - spotsRemaining
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
 

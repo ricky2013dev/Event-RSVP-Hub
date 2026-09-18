@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Event RSVP"
+description = "A polished event RSVP website where guests can view event details, submit their attendance response, choose guest counts and meal preferences, and receive confirmation while organizers see live attendance totals."
+version = "1.0.0"
+id = "artifacts/event-rsvp"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18474
+
+[services.development]
+run = "pnpm --filter @workspace/event-rsvp run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/event-rsvp", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/event-rsvp/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18474"
+BASE_PATH = "/"
