@@ -434,6 +434,9 @@ components:
         messagePlaceholder:
           type: string
           maxLength: 100
+        showSummary:
+          type: boolean
+          description: Whether the invitation shows guests the running attendance totals
       required:
         - title
         - subtitle
@@ -459,6 +462,7 @@ components:
         - tableCount
         - messageLabel
         - messagePlaceholder
+        - showSummary
     HealthStatus:
       type: object
       properties:
@@ -538,6 +542,9 @@ components:
         messagePlaceholder:
           type: string
           maxLength: 100
+        showSummary:
+          type: boolean
+          description: Whether the invitation shows guests the running attendance totals
       required:
         - id
         - title
@@ -564,6 +571,7 @@ components:
         - tableCount
         - messageLabel
         - messagePlaceholder
+        - showSummary
     RsvpTableInput:
       type: object
       properties:

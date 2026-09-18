@@ -69,9 +69,6 @@ function Invitation() {
 
   return (
     <main className="page">
-      <div className="topbar">
-        <button className="gear" type="button" aria-label="관리자" onClick={openAdmin} data-testid="button-open-admin"><Settings size={18} /></button>
-      </div>
       {loginOpen && (
         <div className="modal-backdrop" onClick={() => setLoginOpen(false)}>
           <div className="modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
@@ -115,14 +112,19 @@ function Invitation() {
           <Link className="btn btn-outline" href="/rsvp/lookup" data-testid="button-open-lookup"><Search size={18} /> 기존 예약 확인하기</Link>
         </div>
 
-        <p className="stats-caption"><Users size={17} /> 지금까지 알려주신 참석 현황이에요</p>
-        <section className="stats" data-testid="summary-grid">
-          <div className="stat"><div className="stat-label">등록 가족</div><div className="stat-value" data-testid="text-families">{summary?.attendingResponses ?? '–'}<small>가족</small></div></div>
-          <div className="stat highlight"><div className="stat-label">총 참석 예정 인원</div><div className="stat-value" data-testid="text-total-guests">{summary?.totalGuests ?? '–'}<small>명</small></div></div>
-          <div className="stat"><div className="stat-label">어른 / 자녀</div><div className="stat-value" data-testid="text-adults-children">{summary ? `${summary.totalAdults} / ${summary.totalChildren}` : '–'}<small>명</small></div></div>
-        </section>
+        {event.showSummary && (
+          <>
+            <p className="stats-caption"><Users size={17} /> 지금까지 알려주신 참석 현황이에요</p>
+            <section className="stats" data-testid="summary-grid">
+              <div className="stat"><div className="stat-label">등록 가족</div><div className="stat-value" data-testid="text-families">{summary?.attendingResponses ?? '–'}<small>가족</small></div></div>
+              <div className="stat highlight"><div className="stat-label">총 참석 예정 인원</div><div className="stat-value" data-testid="text-total-guests">{summary?.totalGuests ?? '–'}<small>명</small></div></div>
+              <div className="stat"><div className="stat-label">어른 / 자녀</div><div className="stat-value" data-testid="text-adults-children">{summary ? `${summary.totalAdults} / ${summary.totalChildren}` : '–'}<small>명</small></div></div>
+            </section>
+          </>
+        )}
 
         <p className="footnote">입력하신 정보는 RSVP 목적으로만 사용되며<br />행사 종료 후 안전하게 폐기됩니다.</p>
+        <button className="gear card-gear" type="button" aria-label="관리자" onClick={openAdmin} data-testid="button-open-admin"><Settings size={16} /></button>
       </article>
     </main>
   );

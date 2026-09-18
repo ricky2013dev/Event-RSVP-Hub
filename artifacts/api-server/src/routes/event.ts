@@ -54,6 +54,7 @@ const defaultEvent = {
   tableCount: 20,
   messageLabel: "축하 메시지",
   messagePlaceholder: "따뜻한 한마디를 남겨주세요.",
+  showSummary: true,
 };
 
 async function loadEvent() {

@@ -49,6 +49,7 @@ button:disabled { cursor: default; opacity: .55; }
   border-radius: 22px;
   box-shadow: 0 20px 50px -24px color-mix(in srgb, var(--shadow) 35%, transparent);
   text-align: center;
+  --photo-size: 190px;
 }
 .card::before {
   content: '';
@@ -66,9 +67,9 @@ button:disabled { cursor: default; opacity: .55; }
 .corner.bl { bottom: 10px; left: 10px; transform: rotate(180deg); }
 .corner.br { bottom: 10px; right: 10px; transform: rotate(90deg); }
 
-.photo-wrap { position: relative; width: 190px; margin: 0 auto 26px; }
+.photo-wrap { position: relative; width: var(--photo-size); margin: 0 auto 26px; }
 .photo-ring {
-  width: 190px; height: 190px;
+  width: var(--photo-size); height: var(--photo-size);
   padding: 5px;
   border-radius: 50%;
   border: 2px solid var(--gold);
@@ -108,8 +109,8 @@ button:disabled { cursor: default; opacity: .55; }
 /* Party — a bigger square photo, a tinted top and pill buttons. */
 [data-card-style='party'] .card { border-radius: 26px; border-width: 2px; background: linear-gradient(180deg, var(--tint), var(--card) 26%); }
 [data-card-style='party'] .card::before { inset: 10px; border-radius: 18px; border-style: dotted; }
-[data-card-style='party'] .photo-wrap, [data-card-style='party'] .photo-ring { width: 200px; }
-[data-card-style='party'] .photo-ring { height: 200px; border-radius: 34px; }
+[data-card-style='party'] .card { --photo-size: 200px; }
+[data-card-style='party'] .photo-ring { border-radius: 34px; }
 [data-card-style='party'] .eyebrow { letter-spacing: .3em; }
 [data-card-style='party'] .title { font-weight: 700; }
 [data-card-style='party'] .sparkle { font-size: 15px; }
@@ -198,6 +199,10 @@ button:disabled { cursor: default; opacity: .55; }
   outline: none;
 }
 .field textarea { min-height: 84px; resize: vertical; }
+/* A checkbox sits beside its label instead of above it, and keeps its native size. */
+.field-check { flex-direction: row; align-items: center; gap: 10px; cursor: pointer; }
+.field-check input[type="checkbox"] { width: 20px; height: 20px; flex: none; padding: 0; accent-color: var(--rose); cursor: pointer; }
+.field-check span { color: var(--ink); }
 .field input:focus, .field textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 15%, transparent); }
 
 
@@ -243,9 +248,15 @@ a.btn { text-decoration: none; }
 .choice-field { display: block; min-width: 0; margin: 0; padding: 0; border: 0; }
 .choice-field legend { padding: 0; margin-bottom: 6px; }
 .choices { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.choice { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); font-size: .9rem; color: var(--ink-soft); cursor: pointer; }
-.choice input { margin: 0; accent-color: var(--gold); }
+.choice { position: relative; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); font-size: .9rem; color: var(--ink-soft); cursor: pointer; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+/* Safari honours the width/padding the generic .field input rule puts on a native
+   radio, which stretches it across the label; Chrome does not. So the input becomes
+   an invisible full-size tap target and the dot below is drawn by CSS instead. */
+.choice input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; border-radius: inherit; opacity: 0; -webkit-appearance: none; appearance: none; background: none; cursor: pointer; }
+.choice::before { content: ''; flex: none; width: 15px; height: 15px; border: 1px solid var(--line); border-radius: 50%; background: #fff; box-sizing: border-box; }
 .choice.on { border-color: var(--gold); background: var(--tint); color: var(--ink); }
+.choice.on::before { border-color: var(--gold); background: var(--gold); box-shadow: inset 0 0 0 3px #fff; }
+.choice:focus-within { border-color: var(--gold); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 15%, transparent); }
 .option-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; }
 .field-error { margin: 0; font-size: .85rem; color: #c65f6b; }
 .hint-box { margin: 0; padding: 14px 16px; border-radius: 14px; background: var(--cream); font-size: .88rem; line-height: 1.6; color: var(--muted); }
@@ -281,6 +292,11 @@ a.btn { text-decoration: none; }
 .topbar { width: 100%; max-width: 460px; display: flex; justify-content: space-between; align-items: center; min-height: 40px; margin-bottom: 8px; }
 .gear { margin-left: auto; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--gold-soft); background: rgb(255 255 255 / .7); color: var(--gold); transition: transform .3s ease; }
 .gear:hover { transform: rotate(45deg); }
+/* On the invitation the gear closes the card instead of sitting on a bar above it, so
+   the card is the first thing on screen. It is centred at the foot of the card, clear
+   of both bottom corner ornaments. */
+.card-gear { width: 28px; height: 28px; margin: 12px auto 0; border-color: var(--line); background: none; color: var(--muted); opacity: .7; }
+.card-gear:hover { opacity: 1; color: var(--gold); border-color: var(--gold-soft); }
 .topbar-link { display: inline-flex; align-items: center; gap: 6px; padding: 6px 4px; border: 0; background: none; color: var(--muted); font-size: .9rem; text-decoration: none; }
 .topbar-link:hover { color: var(--ink); }
 
@@ -504,7 +520,36 @@ a.btn { text-decoration: none; }
   .printing-board .board-toolbar { display: none !important; }
 }
 
+/* Phones: the invitation should land on one screen. The portrait scales with the
+   viewport height and every vertical gap tightens, so tall phones still get a big
+   photo while short ones give the space to the details and the buttons. */
 @media (max-width: 640px) {
+  .page { padding: 6px 12px 12px; }
+  .card { padding: 18px 16px 14px; --photo-size: clamp(88px, 14dvh, 190px); }
+  [data-card-style='party'] .card { --photo-size: clamp(94px, 15dvh, 200px); }
+  .corner { width: 40px; height: 40px; }
+  .photo-wrap { margin-bottom: 11px; }
+  .eyebrow { font-size: .68rem; letter-spacing: .3em; }
+  .title { margin-top: 6px; font-size: clamp(1.35rem, 5.6vw, 1.7rem); }
+  .flourish { width: 46px; margin-top: 6px; }
+  .lead { margin: 6px 0 10px; font-size: .87rem; }
+  .note { margin: -4px 0 10px; font-size: .8rem; line-height: 1.5; }
+  .details { padding: 0 12px; border-radius: 12px; }
+  .detail { gap: 10px; padding: 7px 0; }
+  .detail-icon { width: 28px; height: 28px; }
+  .detail-icon svg { width: 15px; height: 15px; }
+  .detail-label { font-size: .7rem; margin-bottom: 1px; }
+  .detail-value { font-size: .9rem; line-height: 1.4; }
+  .map-link { margin-top: 2px; font-size: .8rem; }
+  .actions, .panel { gap: 8px; margin-top: 12px; }
+  .btn { min-height: 44px; border-radius: 12px; font-size: .97rem; }
+  .stats-caption { margin: 10px 0 6px; font-size: .82rem; }
+  .stat { padding: 8px 7px 7px 9px; border-radius: 10px; }
+  .stat-label { font-size: .66rem; }
+  .stat-value { margin-top: 2px; font-size: 1.15rem; }
+  .footnote { margin-top: 8px; font-size: .66rem; }
+  .card-gear { margin-top: 8px; width: 26px; height: 26px; }
+
   .toolbar .btn-small { padding: 0 12px; font-size: .85rem; }
   .admin-header h1 { font-size: 1.3rem; }
   .admin-stats { gap: 8px; }
@@ -515,6 +560,6 @@ a.btn { text-decoration: none; }
 }
 
 @media (max-width: 380px) {
-  .card { padding: 40px 18px 30px; }
-  .stat-value { font-size: 1.2rem; }
+  .card { padding: 16px 12px 12px; }
+  .stat-value { font-size: 1.05rem; }
 }

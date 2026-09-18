@@ -69,7 +69,8 @@ export const GetEventResponse = zod.object({
 }).describe('One selectable option; the value is stored on the RSVP, the label is what guests see')).max(getEventResponseBelongDeptOptionsMax).describe('Choices for the department field; empty turns it back into a free-text box'),
   "tableCount": zod.number().int().min(1).max(getEventResponseTableCountMax).describe('How many tables the seating board shows'),
   "messageLabel": zod.string().max(getEventResponseMessageLabelMax).describe('Heading for the RSVP form\'s message box; empty hides the box'),
-  "messagePlaceholder": zod.string().max(getEventResponseMessagePlaceholderMax)
+  "messagePlaceholder": zod.string().max(getEventResponseMessagePlaceholderMax),
+  "showSummary": zod.boolean().describe('Whether the invitation shows guests the running attendance totals')
 })
 
 
@@ -129,7 +130,8 @@ export const UpdateEventBody = zod.object({
 }).describe('One selectable option; the value is stored on the RSVP, the label is what guests see')).max(updateEventBodyBelongDeptOptionsMax).describe('Choices for the department field; empty turns it back into a free-text box'),
   "tableCount": zod.number().int().min(1).max(updateEventBodyTableCountMax).describe('How many tables the seating board shows'),
   "messageLabel": zod.string().max(updateEventBodyMessageLabelMax).describe('Heading for the RSVP form\'s message box; empty hides the box'),
-  "messagePlaceholder": zod.string().max(updateEventBodyMessagePlaceholderMax)
+  "messagePlaceholder": zod.string().max(updateEventBodyMessagePlaceholderMax),
+  "showSummary": zod.boolean().describe('Whether the invitation shows guests the running attendance totals')
 })
 
 export const updateEventResponseThemeColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
@@ -180,7 +182,8 @@ export const UpdateEventResponse = zod.object({
 }).describe('One selectable option; the value is stored on the RSVP, the label is what guests see')).max(updateEventResponseBelongDeptOptionsMax).describe('Choices for the department field; empty turns it back into a free-text box'),
   "tableCount": zod.number().int().min(1).max(updateEventResponseTableCountMax).describe('How many tables the seating board shows'),
   "messageLabel": zod.string().max(updateEventResponseMessageLabelMax).describe('Heading for the RSVP form\'s message box; empty hides the box'),
-  "messagePlaceholder": zod.string().max(updateEventResponseMessagePlaceholderMax)
+  "messagePlaceholder": zod.string().max(updateEventResponseMessagePlaceholderMax),
+  "showSummary": zod.boolean().describe('Whether the invitation shows guests the running attendance totals')
 })
 
 

@@ -21,7 +21,7 @@ import { CARD_STYLES, useCardStyle } from '@/lib/card-styles';
 import { useDocumentTitle } from '@/lib/document-title';
 import { customTheme, THEMES, useTheme } from '@/lib/themes';
 
-type TextField = Exclude<keyof EventInput, 'capacity' | 'theme' | 'cardStyle' | 'themeColor' | 'themeAccent' | 'belongDeptOptions' | 'tableCount'>;
+type TextField = Exclude<keyof EventInput, 'capacity' | 'theme' | 'cardStyle' | 'themeColor' | 'themeAccent' | 'belongDeptOptions' | 'tableCount' | 'showSummary'>;
 
 // What the editor previews live, before anything is saved.
 type LookPreview = Pick<EventInput, 'theme' | 'cardStyle' | 'themeColor' | 'themeAccent'>;
@@ -119,6 +119,15 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
           <input type="color" value={form![key]} onChange={(e) => set(key, e.target.value)} data-testid={`input-event-${key}`} />
           <code>{form![key].toUpperCase()}</code>
         </span>
+      </label>
+    );
+  }
+
+  function check(key: 'showSummary', label: string, hint: string) {
+    return (
+      <label className="field field-check">
+        <input type="checkbox" checked={form![key]} onChange={(e) => set(key, e.target.checked)} data-testid={`input-event-${key}`} />
+        <span>{label} <em>· {hint}</em></span>
       </label>
     );
   }
@@ -257,6 +266,11 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
           {text('title', '제목', { hint: '뒤에 RSVP가 붙어요' })}
           {text('description', '인사말', { multiline: true })}
           {text('featuredNote', '추가 안내', { hint: '비워두면 표시 안 함', multiline: true })}
+        </section>
+
+        <section className="admin-section">
+          <h2>초대장 표시 <span className="admin-muted">손님에게 무엇까지 보여줄지 정해요</span></h2>
+          {check('showSummary', '참석 현황 공개', '등록 가족 · 총 참석 예정 인원 · 어른/자녀 수를 초대장에 보여줘요')}
         </section>
 
         <section className="admin-section">

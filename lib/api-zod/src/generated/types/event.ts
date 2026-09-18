@@ -65,4 +65,6 @@ export interface Event {
   messageLabel: string;
   /** @maxLength 100 */
   messagePlaceholder: string;
+  /** Whether the invitation shows guests the running attendance totals */
+  showSummary: boolean;
 }

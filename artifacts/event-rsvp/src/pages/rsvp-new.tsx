@@ -121,7 +121,6 @@ function RsvpForm({ event }: { event: Event }) {
     <div className="panel">
       <div className="panel-head">
         <h1>참석 정보 입력</h1>
-        <p>함께 오시는 가족분들을 적어주시면 자리를 준비하겠습니다.</p>
         <Flourish />
       </div>
 
@@ -163,7 +162,7 @@ function RsvpForm({ event }: { event: Event }) {
       <section className="form-section">
         <RuledLabel aside={`${children.length}명`}>자녀 정보</RuledLabel>
         {children.length === 0 ? (
-          <p className="hint-box">함께 오는 자녀가 있다면 아래 버튼으로 추가해 주세요.</p>
+          <p className="hint-box">자녀가 있다면  추가.</p>
         ) : (
           children.map((child, index) => (
             <div className="child-row" key={child.key}>

@@ -1,4 +1,4 @@
-import { integer, jsonb, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, integer, jsonb, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 
 export type ChoiceOption = { value: string; label: string };
 
@@ -35,6 +35,8 @@ export const eventsTable = pgTable("events", {
   // Heading and placeholder for the RSVP form's message box; an empty label hides it.
   messageLabel: text("message_label").notNull().default("축하 메시지"),
   messagePlaceholder: text("message_placeholder").notNull().default("따뜻한 한마디를 남겨주세요."),
+  // Whether the invitation shows guests the running attendance totals.
+  showSummary: boolean("show_summary").notNull().default(true),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow()
