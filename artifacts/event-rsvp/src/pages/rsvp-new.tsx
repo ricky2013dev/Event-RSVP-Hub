@@ -36,7 +36,7 @@ function RsvpForm({ event }: { event: Event }) {
   const [submitError, setSubmitError] = useState('');
 
   const labels = labelsFor(event);
-  const { teamLabel, deptLabel, deptOptions, messageLabel } = labels;
+  const { isFamilyType, teamLabel, deptLabel, deptOptions, messageLabel } = labels;
   const deptAsText = Boolean(deptLabel) && deptOptions.length === 0;
   const deptRequired = Boolean(deptLabel) && deptOptions.length > 0;
 
@@ -57,9 +57,9 @@ function RsvpForm({ event }: { event: Event }) {
 
   function review() {
     const next: Record<string, string> = {};
-    if (!fatherName.trim() && !motherName.trim()) next.parents = t.errParents;
+    if (!fatherName.trim() && !motherName.trim()) next.parents = isFamilyType ? t.errParents : t.errName;
     if (deptRequired && !belongDept.trim()) next.belongDept = t.errChoose(deptLabel);
-    children.forEach((child, index) => {
+    if (isFamilyType) children.forEach((child, index) => {
       const name = child.name.trim();
       const age = child.age.trim();
       if (!name && !age) next[child.key] = t.errChildBlank;
@@ -77,11 +77,11 @@ function RsvpForm({ event }: { event: Event }) {
       {
         data: {
           fatherName: fatherName.trim(),
-          motherName: motherName.trim(),
+          motherName: isFamilyType ? motherName.trim() : '',
           phoneNumber: phoneNumber.trim() || null,
           belongTeam: (teamLabel && belongTeam.trim()) || null,
           belongDept: (deptLabel && belongDept.trim()) || null,
-          children: completeChildren,
+          children: isFamilyType ? completeChildren : [],
           message: (messageLabel && message.trim()) || null,
         },
       },
@@ -104,14 +104,14 @@ function RsvpForm({ event }: { event: Event }) {
       <div className="panel">
         <div className="panel-head">
           <h1>{t.confirmTitle}</h1>
-          <p>{t.confirmLead}</p>
+          <p>{isFamilyType ? t.confirmLead : t.confirmLeadGuest}</p>
           <Flourish />
         </div>
         <FamilyDetails
           labels={labels}
           family={{ fatherName: fatherName.trim(), motherName: motherName.trim(), phone: phoneNumber.trim(), belongDept: deptLabel ? belongDept.trim() : null, belongTeam: teamLabel ? belongTeam.trim() : null, children: completeChildren, message: messageLabel ? message.trim() : null }}
         />
-        <TotalBar adults={adultCount} children={completeChildren.length} testId="text-confirm-total" />
+        <TotalBar adults={adultCount} children={completeChildren.length} isFamilyType={isFamilyType} testId="text-confirm-total" />
         {submitError && <p className="error" role="alert">{submitError}</p>}
         <button className="btn btn-primary" type="button" onClick={submit} disabled={createRsvp.isPending} data-testid="button-submit-rsvp">{createRsvp.isPending ? t.submitting : t.submit}</button>
         <button className="btn btn-ghost" type="button" onClick={() => setStep('form')} disabled={createRsvp.isPending} data-testid="button-edit-form"><Pencil size={15} /> {t.editAgain}</button>
@@ -127,11 +127,16 @@ function RsvpForm({ event }: { event: Event }) {
       </div>
 
       <section className="form-section">
-        <RuledLabel>{t.sectionFamily}</RuledLabel>
-        <div className="two-col">
-          <label className="field"><span>{t.fatherName}</span><input value={fatherName} onChange={(e) => { setFatherName(e.target.value); setErrors((x) => ({ ...x, parents: '' })); }} placeholder={t.fatherPlaceholder} data-testid="input-father-name" /></label>
-          <label className="field"><span>{t.motherName}</span><input value={motherName} onChange={(e) => { setMotherName(e.target.value); setErrors((x) => ({ ...x, parents: '' })); }} placeholder={t.motherPlaceholder} data-testid="input-mother-name" /></label>
-        </div>
+        <RuledLabel>{isFamilyType ? t.sectionFamily : t.sectionGuest}</RuledLabel>
+        {/* A lone guest fills one name box, and it is stored as the father's name. */}
+        {isFamilyType ? (
+          <div className="two-col">
+            <label className="field"><span>{t.fatherName}</span><input value={fatherName} onChange={(e) => { setFatherName(e.target.value); setErrors((x) => ({ ...x, parents: '' })); }} placeholder={t.fatherPlaceholder} data-testid="input-father-name" /></label>
+            <label className="field"><span>{t.motherName}</span><input value={motherName} onChange={(e) => { setMotherName(e.target.value); setErrors((x) => ({ ...x, parents: '' })); }} placeholder={t.motherPlaceholder} data-testid="input-mother-name" /></label>
+          </div>
+        ) : (
+          <label className="field"><span>{t.guestName}</span><input value={fatherName} onChange={(e) => { setFatherName(e.target.value); setErrors((x) => ({ ...x, parents: '' })); }} placeholder={t.guestPlaceholder} data-testid="input-father-name" /></label>
+        )}
         {errors.parents && <p className="field-error">{errors.parents}</p>}
         <label className="field"><span>{t.phone} <em>{t.optional}</em></span><input type="tel" inputMode="tel" autoComplete="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(formatPhone(e.target.value))} placeholder="972-555-0123" data-testid="input-phone" /></label>
         {/* Choices need the full width; a plain text box still pairs up with the team field. */}
@@ -161,6 +166,7 @@ function RsvpForm({ event }: { event: Event }) {
         )}
       </section>
 
+      {isFamilyType && (
       <section className="form-section">
         <RuledLabel aside={t.childCount(children.length)}>{t.sectionChildren}</RuledLabel>
         {children.length === 0 ? (
@@ -184,6 +190,7 @@ function RsvpForm({ event }: { event: Event }) {
           <button type="button" className="btn btn-dashed" onClick={() => setChildren((rows) => [...rows, newChildRow()])} data-testid="button-add-child"><Plus size={16} /> {t.addChild}</button>
         )}
       </section>
+      )}
 
       {messageLabel && (
         <section className="form-section">
@@ -192,7 +199,7 @@ function RsvpForm({ event }: { event: Event }) {
         </section>
       )}
 
-      <TotalBar adults={adultCount} children={completeChildren.length} testId="text-total-members" />
+      <TotalBar adults={adultCount} children={completeChildren.length} isFamilyType={isFamilyType} testId="text-total-members" />
       {submitError && <p className="error" role="alert">{submitError}</p>}
       <button className="btn btn-primary" type="button" onClick={review} data-testid="button-review-rsvp">{t.review}</button>
     </div>

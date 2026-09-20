@@ -217,6 +217,8 @@ button:disabled { cursor: default; opacity: .55; }
 .stats-caption { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 28px 0 14px; color: var(--ink-soft); font-size: .93rem; }
 .stats-caption svg { color: var(--gold); }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+/* A non-family event shows one figure, which would look stranded in a third of the row. */
+.stats.solo { grid-template-columns: 1fr; }
 .stat { padding: 14px 10px 12px 12px; text-align: left; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
 .stat.highlight { background: var(--tint); }
 .stat-label { font-size: .7rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

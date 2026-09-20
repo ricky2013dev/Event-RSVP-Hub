@@ -21,7 +21,7 @@ import { CARD_STYLES, useCardStyle } from '@/lib/card-styles';
 import { useDocumentTitle } from '@/lib/document-title';
 import { customTheme, THEMES, useTheme } from '@/lib/themes';
 
-type TextField = Exclude<keyof EventInput, 'capacity' | 'theme' | 'cardStyle' | 'themeColor' | 'themeAccent' | 'belongDeptOptions' | 'tableCount' | 'showSummary'>;
+type TextField = Exclude<keyof EventInput, 'capacity' | 'theme' | 'cardStyle' | 'themeColor' | 'themeAccent' | 'belongDeptOptions' | 'tableCount' | 'showSummary' | 'isFamilyType'>;
 
 // What the editor previews live, before anything is saved.
 type LookPreview = Pick<EventInput, 'theme' | 'cardStyle' | 'themeColor' | 'themeAccent'>;
@@ -134,7 +134,7 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
     );
   }
 
-  function check(key: 'showSummary', label: string, hint: string) {
+  function check(key: 'showSummary' | 'isFamilyType', label: string, hint: string) {
     return (
       <label className="field field-check">
         <input type="checkbox" checked={form![key]} onChange={(e) => set(key, e.target.checked)} data-testid={`input-event-${key}`} />
@@ -351,6 +351,11 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
 
         {pane === 'rsvp' && (<>
         <section className="admin-section">
+          <h2>접수 단위 <span className="admin-muted">누구 이름으로 접수받을지 정해요</span></h2>
+          {check('isFamilyType', '가족 단위로 접수', '아빠·엄마 이름과 자녀를 받아요. 끄면 이름 한 칸만 받고 자녀 항목은 사라져요')}
+        </section>
+
+        <section className="admin-section">
           <h2>RSVP 양식 <span className="admin-muted">비워두면 그 항목은 양식에서 숨겨져요</span></h2>
           <div className="admin-row">
             {text('belongDeptLabel', '소속 부서 항목 이름', { hint: '예: 캠퍼스(캐롤톤/노스)' })}
@@ -491,6 +496,7 @@ export default function AdminPage() {
           <AdminReservations
             tabs={tabs}
             onSignedOut={signOut}
+            isFamilyType={eventQuery.data?.isFamilyType ?? true}
             eventTitle={eventQuery.data?.title ?? 'RSVP'}
             teamLabel={eventQuery.data?.belongTeamLabel.trim() || '소속'}
             deptLabel={eventQuery.data?.belongDeptLabel.trim() || '소속 부서'}
@@ -502,6 +508,7 @@ export default function AdminPage() {
           <AdminTables
             tabs={tabs}
             onSignedOut={signOut}
+            isFamilyType={eventQuery.data?.isFamilyType ?? true}
             teamLabel={eventQuery.data?.belongTeamLabel.trim() || '소속'}
             eventTitle={eventQuery.data?.title ?? 'RSVP'}
             deptOptions={eventQuery.data?.belongDeptOptions ?? []}

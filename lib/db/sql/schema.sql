@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS events (
   card_style          text NOT NULL DEFAULT 'classic',
   theme_color         text NOT NULL DEFAULT '#d6848d',
   theme_accent        text NOT NULL DEFAULT '#c9a24a',
+  is_family_type      boolean NOT NULL DEFAULT true,
   belong_team_label   text NOT NULL DEFAULT '소속 팀',
   belong_dept_label   text NOT NULL DEFAULT '소속 부서',
   belong_dept_options jsonb NOT NULL DEFAULT '[]'::jsonb,
@@ -58,6 +59,7 @@ ALTER TABLE events ADD COLUMN IF NOT EXISTS theme               text NOT NULL DE
 ALTER TABLE events ADD COLUMN IF NOT EXISTS card_style          text NOT NULL DEFAULT 'classic';
 ALTER TABLE events ADD COLUMN IF NOT EXISTS theme_color         text NOT NULL DEFAULT '#d6848d';
 ALTER TABLE events ADD COLUMN IF NOT EXISTS theme_accent        text NOT NULL DEFAULT '#c9a24a';
+ALTER TABLE events ADD COLUMN IF NOT EXISTS is_family_type      boolean NOT NULL DEFAULT true;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS belong_team_label   text NOT NULL DEFAULT '소속 팀';
 ALTER TABLE events ADD COLUMN IF NOT EXISTS belong_dept_label   text NOT NULL DEFAULT '소속 부서';
 ALTER TABLE events ADD COLUMN IF NOT EXISTS belong_dept_options jsonb NOT NULL DEFAULT '[]'::jsonb;

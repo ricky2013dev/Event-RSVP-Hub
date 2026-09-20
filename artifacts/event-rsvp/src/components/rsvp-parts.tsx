@@ -31,10 +31,11 @@ export type FamilySummary = {
   message?: string | null;
 };
 
-export type FieldLabels = { teamLabel: string; deptLabel: string; deptOptions: ChoiceOption[]; messageLabel: string };
+export type FieldLabels = { isFamilyType: boolean; teamLabel: string; deptLabel: string; deptOptions: ChoiceOption[]; messageLabel: string };
 
-export function labelsFor(event: { belongTeamLabel: string; belongDeptLabel: string; belongDeptOptions: ChoiceOption[]; messageLabel: string }): FieldLabels {
+export function labelsFor(event: { isFamilyType: boolean; belongTeamLabel: string; belongDeptLabel: string; belongDeptOptions: ChoiceOption[]; messageLabel: string }): FieldLabels {
   return {
+    isFamilyType: event.isFamilyType,
     teamLabel: event.belongTeamLabel.trim(),
     deptLabel: event.belongDeptLabel.trim(),
     deptOptions: event.belongDeptOptions,
@@ -58,25 +59,26 @@ export function FamilyDetails({ family, labels }: { family: FamilySummary; label
   const { t } = useLang();
   return (
     <dl className="family">
-      {family.fatherName && <div><dt>{t.father}</dt><dd>{family.fatherName}</dd></div>}
-      {family.motherName && <div><dt>{t.mother}</dt><dd>{family.motherName}</dd></div>}
+      {family.fatherName && <div><dt>{labels.isFamilyType ? t.father : t.guest}</dt><dd>{family.fatherName}</dd></div>}
+      {labels.isFamilyType && family.motherName && <div><dt>{t.mother}</dt><dd>{family.motherName}</dd></div>}
       {family.phone && <div><dt>{t.phone}</dt><dd>{family.phone}</dd></div>}
       {family.belongDept && <div><dt>{labels.deptLabel || t.deptFallback}</dt><dd>{optionLabel(labels.deptOptions, family.belongDept)}</dd></div>}
       {family.belongTeam && <div><dt>{labels.teamLabel || t.teamFallback}</dt><dd>{family.belongTeam}</dd></div>}
       {family.tableNumber != null && <div><dt>{t.table}</dt><dd data-testid="text-table-number">{t.tableNo(family.tableNumber)}</dd></div>}
-      <div><dt>{t.childrenLabel}</dt><dd>{family.children.length === 0 ? t.none : family.children.map((child) => t.childWithAge(child.name, child.age)).join('\n')}</dd></div>
+      {labels.isFamilyType && <div><dt>{t.childrenLabel}</dt><dd>{family.children.length === 0 ? t.none : family.children.map((child) => t.childWithAge(child.name, child.age)).join('\n')}</dd></div>}
       {family.message && <div><dt>{labels.messageLabel || t.messageFallback}</dt><dd>{family.message}</dd></div>}
     </dl>
   );
 }
 
-export function TotalBar({ adults, children, testId }: { adults: number; children: number; testId: string }) {
+// Outside a family event nobody brings children, so the adults/children split is left off.
+export function TotalBar({ adults, children, isFamilyType = true, testId }: { adults: number; children: number; isFamilyType?: boolean; testId: string }) {
   const { t } = useLang();
   return (
     <div className="total-bar">
       <span className="total-label"><Users size={16} /> {t.totalAttending}</span>
       <span className="total-value">
-        <small>{t.adultsChildren(adults, children)}</small>
+        {isFamilyType && <small>{t.adultsChildren(adults, children)}</small>}
         <strong data-testid={testId}>{t.totalPeople(adults + children)}</strong>
       </span>
     </div>

@@ -24,6 +24,8 @@ export const eventsTable = pgTable("events", {
   // The two colours the "custom" theme derives its whole palette from.
   themeColor: text("theme_color").notNull().default("#d6848d"),
   themeAccent: text("theme_accent").notNull().default("#c9a24a"),
+  // Family events ask for two parents and their children; otherwise one person registers alone.
+  isFamilyType: boolean("is_family_type").notNull().default(true),
   // Label for the RSVP form's team field; empty hides the field.
   belongTeamLabel: text("belong_team_label").notNull().default("소속 팀"),
   // Label for the RSVP form's department field; empty hides the field.

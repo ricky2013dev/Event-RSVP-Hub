@@ -61,6 +61,7 @@ export const GetEventResponse = zod.object({
   "cardStyle": zod.enum(['classic', 'dinner', 'birthday', 'party', 'performance', 'ceremony']).describe('Card shape and ornaments for the invitation, chosen by the kind of event'),
   "themeColor": zod.string().regex(getEventResponseThemeColorRegExp).describe('Main colour the "custom" theme is built from'),
   "themeAccent": zod.string().regex(getEventResponseThemeAccentRegExp).describe('Frame and detail colour of the "custom" theme'),
+  "isFamilyType": zod.boolean().describe('Family events ask for both parents and their children; otherwise one person registers alone'),
   "belongTeamLabel": zod.string().max(getEventResponseBelongTeamLabelMax).describe('Label for the team field on the RSVP form; empty hides the field'),
   "belongDeptLabel": zod.string().max(getEventResponseBelongDeptLabelMax).describe('Label for the department field on the RSVP form; empty hides the field'),
   "belongDeptOptions": zod.array(zod.object({
@@ -122,6 +123,7 @@ export const UpdateEventBody = zod.object({
   "cardStyle": zod.enum(['classic', 'dinner', 'birthday', 'party', 'performance', 'ceremony']).describe('Card shape and ornaments for the invitation, chosen by the kind of event'),
   "themeColor": zod.string().regex(updateEventBodyThemeColorRegExp).describe('Main colour the "custom" theme is built from'),
   "themeAccent": zod.string().regex(updateEventBodyThemeAccentRegExp).describe('Frame and detail colour of the "custom" theme'),
+  "isFamilyType": zod.boolean().describe('Family events ask for both parents and their children; otherwise one person registers alone'),
   "belongTeamLabel": zod.string().max(updateEventBodyBelongTeamLabelMax).describe('Label for the team field on the RSVP form; empty hides the field'),
   "belongDeptLabel": zod.string().max(updateEventBodyBelongDeptLabelMax).describe('Label for the department field on the RSVP form; empty hides the field'),
   "belongDeptOptions": zod.array(zod.object({
@@ -174,6 +176,7 @@ export const UpdateEventResponse = zod.object({
   "cardStyle": zod.enum(['classic', 'dinner', 'birthday', 'party', 'performance', 'ceremony']).describe('Card shape and ornaments for the invitation, chosen by the kind of event'),
   "themeColor": zod.string().regex(updateEventResponseThemeColorRegExp).describe('Main colour the "custom" theme is built from'),
   "themeAccent": zod.string().regex(updateEventResponseThemeAccentRegExp).describe('Frame and detail colour of the "custom" theme'),
+  "isFamilyType": zod.boolean().describe('Family events ask for both parents and their children; otherwise one person registers alone'),
   "belongTeamLabel": zod.string().max(updateEventResponseBelongTeamLabelMax).describe('Label for the team field on the RSVP form; empty hides the field'),
   "belongDeptLabel": zod.string().max(updateEventResponseBelongDeptLabelMax).describe('Label for the department field on the RSVP form; empty hides the field'),
   "belongDeptOptions": zod.array(zod.object({

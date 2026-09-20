@@ -52,7 +52,7 @@ function Complete({ event }: { event: Event }) {
         <>
           <p>{t.registeredAs}</p>
           <FamilyDetails labels={labelsFor(event)} family={{ ...family, phone: family.phoneNumberMasked }} />
-          <TotalBar adults={family.adultCount} children={family.childCount} testId="text-complete-total" />
+          <TotalBar adults={family.adultCount} children={family.childCount} isFamilyType={event.isFamilyType} testId="text-complete-total" />
           <p className="footnote">{t.saveLink1}<br />{t.saveLink2}</p>
           <button className="btn btn-outline" type="button" onClick={() => void copyLink()} data-testid="button-copy-link">{copied ? <><Check size={16} /> {t.copied}</> : <><Copy size={16} /> {t.copyLink}</>}</button>
         </>

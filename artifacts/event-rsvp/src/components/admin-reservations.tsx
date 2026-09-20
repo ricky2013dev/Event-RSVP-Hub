@@ -30,16 +30,22 @@ function csvCell(value: string | number) {
   return `"${text.replace(/"/g, '""')}"`;
 }
 
-function downloadCsv(rsvps: Rsvp[], labels: { eventTitle: string; teamLabel: string; deptLabel: string; deptOptions: ChoiceOption[]; messageLabel: string }) {
-  const header = ['가족', '아빠', '엄마', '자녀', '어른 수', '자녀 수', '총 인원', '연락처', labels.deptLabel, labels.teamLabel, '테이블', labels.messageLabel, '등록 일시'];
+function downloadCsv(rsvps: Rsvp[], labels: { isFamilyType: boolean; eventTitle: string; teamLabel: string; deptLabel: string; deptOptions: ChoiceOption[]; messageLabel: string }) {
+  const header = labels.isFamilyType
+    ? ['가족', '아빠', '엄마', '자녀', '어른 수', '자녀 수', '총 인원', '연락처', labels.deptLabel, labels.teamLabel, '테이블', labels.messageLabel, '등록 일시']
+    : ['번호', '이름', '연락처', labels.deptLabel, labels.teamLabel, '테이블', labels.messageLabel, '등록 일시'];
   const lines = rsvps.map((rsvp, index) => [
-    `가족 ${index + 1}`,
+    labels.isFamilyType ? `가족 ${index + 1}` : index + 1,
     rsvp.fatherName,
-    rsvp.motherName,
-    rsvp.children.map((child) => `${child.name}(${child.age}살)`).join(', '),
-    rsvp.adultCount,
-    rsvp.childCount,
-    rsvp.guestCount,
+    ...(labels.isFamilyType
+      ? [
+          rsvp.motherName,
+          rsvp.children.map((child) => `${child.name}(${child.age}살)`).join(', '),
+          rsvp.adultCount,
+          rsvp.childCount,
+          rsvp.guestCount,
+        ]
+      : []),
     rsvp.phoneNumber ?? '',
     optionLabel(labels.deptOptions, rsvp.belongDept),
     rsvp.belongTeam ?? '',
@@ -64,6 +70,7 @@ function downloadCsv(rsvps: Rsvp[], labels: { eventTitle: string; teamLabel: str
 type Props = {
   tabs: React.ReactNode;
   onSignedOut: () => void;
+  isFamilyType: boolean;
   eventTitle: string;
   teamLabel: string;
   deptLabel: string;
@@ -72,7 +79,7 @@ type Props = {
   messageLabel: string;
 };
 
-export function AdminReservations({ tabs, onSignedOut, eventTitle, teamLabel, deptLabel, deptOptions, tableCount, messageLabel }: Props) {
+export function AdminReservations({ tabs, onSignedOut, isFamilyType, eventTitle, teamLabel, deptLabel, deptOptions, tableCount, messageLabel }: Props) {
   const queryClient = useQueryClient();
   const rsvpsQuery = useListRsvps({ query: { queryKey: getListRsvpsQueryKey(), retry: false } });
   const deleteRsvp = useDeleteRsvp();
@@ -146,6 +153,9 @@ export function AdminReservations({ tabs, onSignedOut, eventTitle, teamLabel, de
     [rsvps],
   );
 
+  // 엄마, 자녀 수, 총 인원 are dropped outside a family event, so the empty rows span fewer columns.
+  const columnCount = isFamilyType ? 11 : 8;
+
   const rows = useMemo(() => {
     const numbered = rsvps.map((rsvp, index) => ({ rsvp, number: index + 1 }));
     if (!query.trim() || printing) return numbered;
@@ -157,41 +167,46 @@ export function AdminReservations({ tabs, onSignedOut, eventTitle, teamLabel, de
       <div className="tabs-row">
         {tabs}
         <div className="toolbar">
-          <button className="btn btn-outline btn-small toolbar-add" type="button" onClick={() => { setRowError(''); setEditor({ rsvp: null }); }} data-testid="button-add-rsvp"><Plus size={18} /> 가족 추가</button>
-          <button className="btn btn-outline icon-btn" type="button" title="CSV로 내보내기" aria-label="CSV로 내보내기" disabled={rsvps.length === 0} onClick={() => downloadCsv(rsvps, { eventTitle, teamLabel, deptLabel, deptOptions, messageLabel })} data-testid="button-export-csv"><Download size={18} /></button>
+          <button className="btn btn-outline btn-small toolbar-add" type="button" onClick={() => { setRowError(''); setEditor({ rsvp: null }); }} data-testid="button-add-rsvp"><Plus size={18} /> {isFamilyType ? '가족 추가' : '참석자 추가'}</button>
+          <button className="btn btn-outline icon-btn" type="button" title="CSV로 내보내기" aria-label="CSV로 내보내기" disabled={rsvps.length === 0} onClick={() => downloadCsv(rsvps, { isFamilyType, eventTitle, teamLabel, deptLabel, deptOptions, messageLabel })} data-testid="button-export-csv"><Download size={18} /></button>
           <button className="btn btn-outline btn-small toolbar-print" type="button" disabled={rsvps.length === 0} onClick={() => setPrinting(true)} data-testid="button-print"><Printer size={18} /> 명단 · 메시지 인쇄</button>
         </div>
       </div>
 
       <header className="print-only print-header">
         <h1>{eventTitle} 참석 명단</h1>
-        <p>등록 {totals.families}가족 · 총 {totals.adults + totals.children}명 (어른 {totals.adults} / 자녀 {totals.children}) · 출력 {dateFormat.format(new Date())}</p>
+        <p>
+          {isFamilyType
+            ? `등록 ${totals.families}가족 · 총 ${totals.adults + totals.children}명 (어른 ${totals.adults} / 자녀 ${totals.children})`
+            : `총 ${totals.adults}명`} · 출력 {dateFormat.format(new Date())}
+        </p>
       </header>
 
-      <section className="stats admin-stats no-print" data-testid="admin-summary">
-        <div className="stat"><div className="stat-label">등록 가족</div><div className="stat-value" data-testid="text-admin-families">{totals.families}<small>가족</small></div></div>
+      {/* Outside a family event every reply is one adult, so the head count is the only figure worth showing. */}
+      <section className={`stats admin-stats no-print ${isFamilyType ? '' : 'solo'}`} data-testid="admin-summary">
+        {isFamilyType && <div className="stat"><div className="stat-label">등록 가족</div><div className="stat-value" data-testid="text-admin-families">{totals.families}<small>가족</small></div></div>}
         <div className="stat highlight"><div className="stat-label">총 참석 예정 인원</div><div className="stat-value" data-testid="text-admin-total">{totals.adults + totals.children}<small>명</small></div></div>
-        <div className="stat"><div className="stat-label">어른 / 자녀</div><div className="stat-value" data-testid="text-admin-adults-children">{totals.adults} / {totals.children}<small>명</small></div></div>
+        {isFamilyType && <div className="stat"><div className="stat-label">어른 / 자녀</div><div className="stat-value" data-testid="text-admin-adults-children">{totals.adults} / {totals.children}<small>명</small></div></div>}
       </section>
 
       <label className="search-box no-print">
         <Search size={18} />
         <span className="sr-only">검색</span>
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={`이름, 자녀 이름, 연락처 뒷자리, ${teamLabel} 검색`} data-testid="input-admin-search" />
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={`이름, ${isFamilyType ? '자녀 이름, ' : ''}연락처 뒷자리, ${teamLabel} 검색`} data-testid="input-admin-search" />
       </label>
 
       <div className="table-wrap">
         <table className="rsvp-table" data-testid="table-rsvps">
           <thead>
             <tr>
-              <th>가족</th>
-              <th>아빠</th>
-              <th>엄마</th>
-              <th>자녀</th>
+              <th>{isFamilyType ? '가족' : '번호'}</th>
+              <th>{isFamilyType ? '아빠' : '이름'}</th>
+              {isFamilyType && <th>엄마</th>}
+              <th>{isFamilyType ? '자녀' : messageLabel}</th>
               <th>테이블</th>
               <th title={`${deptLabel} · ${teamLabel}`}>{shortHeader(deptLabel)} · {shortHeader(teamLabel)}</th>
-              <th className="num">자녀 수</th>
-              <th className="num">총 인원</th>
+              {isFamilyType && <th className="num">자녀 수</th>}
+              {isFamilyType && <th className="num">총 인원</th>}
               <th>연락처</th>
               <th>등록 일시</th>
               <th className="col-actions no-print">관리</th>
@@ -199,13 +214,13 @@ export function AdminReservations({ tabs, onSignedOut, eventTitle, teamLabel, de
           </thead>
           <tbody>
             {rsvpsQuery.isLoading ? (
-              <tr><td colSpan={11} className="table-empty">불러오는 중…</td></tr>
+              <tr><td colSpan={columnCount} className="table-empty">불러오는 중…</td></tr>
             ) : rsvpsQuery.isError ? (
-              <tr><td colSpan={11} className="table-empty">목록을 불러오지 못했어요. <button type="button" className="link-button" onClick={() => void rsvpsQuery.refetch()}>다시 시도</button></td></tr>
+              <tr><td colSpan={columnCount} className="table-empty">목록을 불러오지 못했어요. <button type="button" className="link-button" onClick={() => void rsvpsQuery.refetch()}>다시 시도</button></td></tr>
             ) : rows.length === 0 ? (
-              <tr><td colSpan={11} className="table-empty">
+              <tr><td colSpan={columnCount} className="table-empty">
                 {query ? '검색 결과가 없어요.' : (
-                  <>아직 RSVP가 없어요. <button type="button" className="link-button" onClick={() => { setRowError(''); setEditor({ rsvp: null }); }} data-testid="button-add-rsvp-empty">가족 직접 추가</button></>
+                  <>아직 RSVP가 없어요. <button type="button" className="link-button" onClick={() => { setRowError(''); setEditor({ rsvp: null }); }} data-testid="button-add-rsvp-empty">{isFamilyType ? '가족 직접 추가' : '참석자 직접 추가'}</button></>
                 )}
               </td></tr>
             ) : (
@@ -213,10 +228,11 @@ export function AdminReservations({ tabs, onSignedOut, eventTitle, teamLabel, de
                 <tr key={rsvp.id} data-testid={`row-rsvp-${rsvp.id}`}>
                   <td className="muted-cell nowrap">{number}</td>
                   <td>{rsvp.fatherName || '—'}</td>
-                  <td>{rsvp.motherName || '—'}</td>
+                  {isFamilyType && <td>{rsvp.motherName || '—'}</td>}
                   <td className="children-cell">
-                    {rsvp.children.length ? rsvp.children.map((child) => child.name).join(', ') : '—'}
+                    {isFamilyType && (rsvp.children.length ? rsvp.children.map((child) => child.name).join(', ') : '—')}
                     {rsvp.message && <div className="row-message">“{rsvp.message}”</div>}
+                    {!isFamilyType && !rsvp.message && '—'}
                   </td>
                   <td className="nowrap">
                     <select
@@ -241,8 +257,8 @@ export function AdminReservations({ tabs, onSignedOut, eventTitle, teamLabel, de
                       </>
                     ) : '—'}
                   </td>
-                  <td className="num">{rsvp.childCount}</td>
-                  <td className="num strong">{rsvp.guestCount}</td>
+                  {isFamilyType && <td className="num">{rsvp.childCount}</td>}
+                  {isFamilyType && <td className="num strong">{rsvp.guestCount}</td>}
                   <td className="nowrap">{rsvp.phoneNumber || '—'}</td>
                   <td className="muted-cell nowrap">{dateFormat.format(new Date(rsvp.createdAt))}</td>
                   <td className="row-actions no-print">
@@ -266,12 +282,12 @@ export function AdminReservations({ tabs, onSignedOut, eventTitle, teamLabel, de
         </table>
       </div>
       {rowError && <p className="error no-print" role="alert" data-testid="status-row-error">{rowError}</p>}
-      {query && !printing && rows.length > 0 && <p className="admin-muted no-print">{rows.length}건 표시 중 · 전체 {rsvps.length}가족</p>}
+      {query && !printing && rows.length > 0 && <p className="admin-muted no-print">{rows.length}건 표시 중 · 전체 {rsvps.length}{isFamilyType ? '가족' : '명'}</p>}
       {editor && (
         <AdminRsvpEditor
           key={editor.rsvp?.id ?? 'new'}
           rsvp={editor.rsvp}
-          labels={{ teamLabel, deptLabel, deptOptions, messageLabel }}
+          labels={{ isFamilyType, teamLabel, deptLabel, deptOptions, messageLabel }}
           onClose={() => setEditor(null)}
           onSaved={() => { setEditor(null); refreshLists(); }}
           onSignedOut={onSignedOut}

@@ -118,10 +118,11 @@ function Invitation() {
         {event.showSummary && (
           <>
             <p className="stats-caption"><Users size={17} /> {t.statsCaption}</p>
-            <section className="stats" data-testid="summary-grid">
-              <div className="stat"><div className="stat-label">{t.statFamilies}</div><div className="stat-value" data-testid="text-families">{summary?.attendingResponses ?? '–'}<small>{t.unitFamilies}</small></div></div>
+            {/* Outside a family event every reply is one adult, so the head count is the only figure worth showing. */}
+            <section className={`stats ${event.isFamilyType ? '' : 'solo'}`} data-testid="summary-grid">
+              {event.isFamilyType && <div className="stat"><div className="stat-label">{t.statFamilies}</div><div className="stat-value" data-testid="text-families">{summary?.attendingResponses ?? '–'}<small>{t.unitFamilies}</small></div></div>}
               <div className="stat highlight"><div className="stat-label">{t.statTotal}</div><div className="stat-value" data-testid="text-total-guests">{summary?.totalGuests ?? '–'}<small>{t.unitPeople}</small></div></div>
-              <div className="stat"><div className="stat-label">{t.statAdultsChildren}</div><div className="stat-value" data-testid="text-adults-children">{summary ? `${summary.totalAdults} / ${summary.totalChildren}` : '–'}<small>{t.unitPeople}</small></div></div>
+              {event.isFamilyType && <div className="stat"><div className="stat-label">{t.statAdultsChildren}</div><div className="stat-value" data-testid="text-adults-children">{summary ? `${summary.totalAdults} / ${summary.totalChildren}` : '–'}<small>{t.unitPeople}</small></div></div>}
             </section>
           </>
         )}

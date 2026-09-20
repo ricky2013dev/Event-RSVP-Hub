@@ -11,7 +11,7 @@ const newKey = () => Math.random().toString(36).slice(2);
 // Families the admin types in never filled the form themselves, so the note says where the entry came from.
 export const ADMIN_NOTE = '관리자 등록';
 
-export type EditorLabels = { teamLabel: string; deptLabel: string; deptOptions: ChoiceOption[]; messageLabel: string };
+export type EditorLabels = { isFamilyType: boolean; teamLabel: string; deptLabel: string; deptOptions: ChoiceOption[]; messageLabel: string };
 
 type Props = {
   // null opens the editor empty, to register a family that never sent an RSVP.
@@ -37,6 +37,7 @@ export function AdminRsvpEditor({ rsvp, labels, onClose, onSaved, onSignedOut }:
   const creating = rsvp === null;
   const saving = creating ? createRsvp.isPending : updateRsvp.isPending;
   const deptAsText = labels.deptOptions.length === 0;
+  const { isFamilyType } = labels;
 
   function updateChild(key: string, patch: Partial<ChildRow>) {
     setChildren((rows) => rows.map((row) => (row.key === key ? { ...row, ...patch } : row)));
@@ -44,21 +45,23 @@ export function AdminRsvpEditor({ rsvp, labels, onClose, onSaved, onSignedOut }:
 
   function save(formEvent: React.FormEvent<HTMLFormElement>) {
     formEvent.preventDefault();
-    if (!fatherName.trim() && !motherName.trim()) return setError('아빠 또는 엄마 이름 중 최소 한 분은 입력해 주세요.');
-    if (children.some((child) => !child.name.trim() || !child.age.trim())) return setError('자녀의 이름과 나이를 모두 입력하거나 그 칸을 삭제해 주세요.');
-    if (children.some((child) => !Number.isInteger(Number(child.age)) || Number(child.age) < 0 || Number(child.age) > 30)) {
-      return setError('나이는 0살에서 30살 사이로 입력해 주세요.');
+    if (!fatherName.trim() && !motherName.trim()) return setError(isFamilyType ? '아빠 또는 엄마 이름 중 최소 한 분은 입력해 주세요.' : '이름을 입력해 주세요.');
+    if (isFamilyType) {
+      if (children.some((child) => !child.name.trim() || !child.age.trim())) return setError('자녀의 이름과 나이를 모두 입력하거나 그 칸을 삭제해 주세요.');
+      if (children.some((child) => !Number.isInteger(Number(child.age)) || Number(child.age) < 0 || Number(child.age) > 30)) {
+        return setError('나이는 0살에서 30살 사이로 입력해 주세요.');
+      }
     }
 
     setError('');
     const note = message.trim();
     const data = {
       fatherName: fatherName.trim(),
-      motherName: motherName.trim(),
+      motherName: isFamilyType ? motherName.trim() : '',
       phoneNumber: phoneNumber.trim() || null,
       belongDept: belongDept.trim() || null,
       belongTeam: belongTeam.trim() || null,
-      children: children.map((child) => ({ name: child.name.trim(), age: Number(child.age) })),
+      children: isFamilyType ? children.map((child) => ({ name: child.name.trim(), age: Number(child.age) })) : [],
       message: creating ? [note, ADMIN_NOTE].filter(Boolean).join(' · ').slice(0, 500) : note || null,
     };
     const onError = (saveError: unknown) => {
@@ -70,7 +73,7 @@ export function AdminRsvpEditor({ rsvp, labels, onClose, onSaved, onSignedOut }:
     else updateRsvp.mutate({ id: rsvp.id, data }, { onSuccess: onSaved, onError });
   }
 
-  const title = creating ? '가족 직접 추가' : '예약 수정';
+  const title = creating ? (isFamilyType ? '가족 직접 추가' : '참석자 직접 추가') : '예약 수정';
 
   return (
     <div className="modal-backdrop no-print" role="dialog" aria-modal="true" aria-label={title}>
@@ -81,11 +84,15 @@ export function AdminRsvpEditor({ rsvp, labels, onClose, onSaved, onSignedOut }:
         </header>
 
         <div className="modal-body">
-          {creating && <p className="admin-muted">RSVP를 보내지 않은 가족을 대신 등록해요. {labels.messageLabel || '메시지'}에 “{ADMIN_NOTE}”이 함께 남아요.</p>}
-          <div className="admin-row">
-            <label className="field"><span>아빠 이름</span><input value={fatherName} onChange={(e) => setFatherName(e.target.value)} data-testid="input-edit-father" /></label>
-            <label className="field"><span>엄마 이름</span><input value={motherName} onChange={(e) => setMotherName(e.target.value)} data-testid="input-edit-mother" /></label>
-          </div>
+          {creating && <p className="admin-muted">RSVP를 보내지 않은 {isFamilyType ? '가족' : '분'}을 대신 등록해요. {labels.messageLabel || '메시지'}에 “{ADMIN_NOTE}”이 함께 남아요.</p>}
+          {isFamilyType ? (
+            <div className="admin-row">
+              <label className="field"><span>아빠 이름</span><input value={fatherName} onChange={(e) => setFatherName(e.target.value)} data-testid="input-edit-father" /></label>
+              <label className="field"><span>엄마 이름</span><input value={motherName} onChange={(e) => setMotherName(e.target.value)} data-testid="input-edit-mother" /></label>
+            </div>
+          ) : (
+            <label className="field"><span>이름</span><input value={fatherName} onChange={(e) => setFatherName(e.target.value)} data-testid="input-edit-father" /></label>
+          )}
           <label className="field"><span>연락처</span><input type="tel" inputMode="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(formatPhone(e.target.value))} data-testid="input-edit-phone" /></label>
 
           {labels.deptLabel && (deptAsText ? (
@@ -109,6 +116,7 @@ export function AdminRsvpEditor({ rsvp, labels, onClose, onSaved, onSignedOut }:
             <label className="field"><span>{labels.teamLabel}</span><input value={belongTeam} maxLength={50} onChange={(e) => setBelongTeam(e.target.value)} data-testid="input-edit-team" /></label>
           )}
 
+          {isFamilyType && (
           <div className="field">
             <span>자녀 <em>{children.length}명</em></span>
             {children.map((child, index) => (
@@ -122,6 +130,7 @@ export function AdminRsvpEditor({ rsvp, labels, onClose, onSaved, onSignedOut }:
               <button type="button" className="btn btn-dashed" onClick={() => setChildren((rows) => [...rows, { key: newKey(), name: '', age: '' }])} data-testid="button-add-edit-child"><Plus size={16} /> 자녀 추가</button>
             )}
           </div>
+          )}
 
           {labels.messageLabel && (
             <label className="field"><span>{labels.messageLabel}</span><textarea rows={2} maxLength={500} value={message} onChange={(e) => setMessage(e.target.value)} data-testid="input-edit-message" /></label>

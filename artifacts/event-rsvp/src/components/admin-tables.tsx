@@ -18,6 +18,7 @@ const TABLE_STEP = 1;
 type Props = {
   tabs: React.ReactNode;
   onSignedOut: () => void;
+  isFamilyType: boolean;
   teamLabel: string;
   eventTitle: string;
   deptOptions: ChoiceOption[];
@@ -34,7 +35,7 @@ function belonging(rsvp: Rsvp, deptOptions: ChoiceOption[]) {
   return [optionLabel(deptOptions, rsvp.belongDept), rsvp.belongTeam ?? ''].filter(Boolean).join(' · ');
 }
 
-export function AdminTables({ tabs, onSignedOut, teamLabel, eventTitle, deptOptions, tableCount, onChangeTableCount }: Props) {
+export function AdminTables({ tabs, onSignedOut, isFamilyType, teamLabel, eventTitle, deptOptions, tableCount, onChangeTableCount }: Props) {
   const queryClient = useQueryClient();
   const rsvpsQuery = useListRsvps({ query: { queryKey: getListRsvpsQueryKey(), retry: false } });
   const assignTable = useAssignRsvpTable();
@@ -166,7 +167,7 @@ export function AdminTables({ tabs, onSignedOut, teamLabel, eventTitle, deptOpti
         </button>
         <button type="button" className={`stat stat-button ${filter.kind === 'unassigned' ? 'on' : ''}`} aria-pressed={filter.kind === 'unassigned'} onClick={() => setFilter({ kind: 'unassigned' })} data-testid="button-filter-unassigned">
           <div className="stat-label">미배정</div>
-          <div className="stat-value" data-testid="text-unassigned">{summary.unassignedAdults}<small>명 · {summary.unassignedFamilies}가족</small></div>
+          <div className="stat-value" data-testid="text-unassigned">{summary.unassignedAdults}<small>명{isFamilyType && ` · ${summary.unassignedFamilies}가족`}</small></div>
         </button>
       </section>
 
@@ -200,13 +201,13 @@ export function AdminTables({ tabs, onSignedOut, teamLabel, eventTitle, deptOpti
       <label className="search-box no-print">
         <Search size={18} />
         <span className="sr-only">검색</span>
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={`이름, 자녀 이름, 연락처 뒷자리, ${teamLabel} 검색`} data-testid="input-table-search" />
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={`이름, ${isFamilyType ? '자녀 이름, ' : ''}연락처 뒷자리, ${teamLabel} 검색`} data-testid="input-table-search" />
       </label>
 
       {error && <p className="error no-print" role="alert" data-testid="status-table-error">{error}</p>}
 
       <div className="board-toolbar no-print">
-        <span className="admin-muted">가족 카드를 원하는 테이블로 끌어다 놓으면 배정돼요.</span>
+        <span className="admin-muted">{isFamilyType ? '가족' : '참석자'} 카드를 원하는 테이블로 끌어다 놓으면 배정돼요.</span>
         <div className="board-toolbar-actions">
           <button type="button" className="btn btn-outline btn-small" onClick={() => setPrinting('list')} data-testid="button-print-table-list"><List size={16} /> 목록으로 인쇄</button>
           <button type="button" className="btn btn-outline btn-small" onClick={() => setPrinting('board')} data-testid="button-print-table-board"><LayoutGrid size={16} /> 배치도로 인쇄</button>

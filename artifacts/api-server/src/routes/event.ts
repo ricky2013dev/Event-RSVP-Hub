@@ -48,6 +48,7 @@ const defaultEvent = {
   cardStyle: "classic",
   themeColor: "#d6848d",
   themeAccent: "#c9a24a",
+  isFamilyType: true,
   belongTeamLabel: "소속 팀",
   belongDeptLabel: "소속 부서",
   belongDeptOptions: [] as { value: string; label: string }[],
@@ -243,20 +244,23 @@ type RsvpValues = {
 };
 
 async function rsvpValues(data: RsvpInput): Promise<{ error: string } | { values: RsvpValues }> {
+  const event = await loadEvent();
+
+  // Outside a family event one person registers alone, so a spouse or children in the
+  // body are dropped rather than stored behind the admin's back.
   const fatherName = data.fatherName.trim();
-  const motherName = data.motherName.trim();
-  const children = data.children.map((child) => ({ name: child.name.trim(), age: child.age }));
-  if (!fatherName && !motherName) return { error: "At least one parent name is required" };
+  const motherName = event.isFamilyType ? data.motherName.trim() : "";
+  const children = event.isFamilyType ? data.children.map((child) => ({ name: child.name.trim(), age: child.age })) : [];
+  if (!fatherName && !motherName) return { error: event.isFamilyType ? "At least one parent name is required" : "A name is required" };
   if (children.some((child) => !child.name)) return { error: "Every child needs a name" };
 
   // When the admin has set choices, only those values are accepted for the department.
-  const event = await loadEvent();
   const belongDept = data.belongDept?.trim() || null;
   if (belongDept && event.belongDeptOptions.length > 0 && !event.belongDeptOptions.some((option) => option.value === belongDept)) {
     return { error: "Unknown department choice" };
   }
 
-  // Each named parent is one adult, so a single-parent family is counted correctly.
+  // Each named adult counts as one, so a single-parent family and a lone guest are both correct.
   const adultCount = (fatherName ? 1 : 0) + (motherName ? 1 : 0);
   return {
     values: {

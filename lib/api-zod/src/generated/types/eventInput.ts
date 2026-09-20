@@ -43,6 +43,8 @@ export interface EventInput {
      * @pattern ^#[0-9a-fA-F]{6}$
      */
   themeAccent: string;
+  /** Family events ask for both parents and their children; otherwise one person registers alone */
+  isFamilyType: boolean;
   /**
      * Label for the team field on the RSVP form; empty hides the field
      * @maxLength 30
