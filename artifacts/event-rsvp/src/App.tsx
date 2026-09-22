@@ -110,10 +110,16 @@ function Invitation() {
           {event.dressCode && <div className="detail"><span className="detail-icon"><Shirt size={18} /></span><div><div className="detail-label">{t.dressCode}</div><div className="detail-value" data-testid="text-dress-code">{event.dressCode}</div></div></div>}
         </section>
 
-        <div className="actions">
-          <Link className="btn btn-primary" href="/rsvp/new" data-testid="button-open-rsvp">{t.openRsvp}</Link>
-          <Link className="btn btn-outline" href="/rsvp/lookup" data-testid="button-open-lookup"><Search size={18} /> {t.openLookup}</Link>
-        </div>
+        {event.rsvpClosed ? (
+          <div className="actions">
+            <div className="hint-box center" data-testid="text-rsvp-closed"><strong>{t.closedTitle}</strong><p>{t.closedLead}</p></div>
+          </div>
+        ) : (
+          <div className="actions">
+            <Link className="btn btn-primary" href="/rsvp/new" data-testid="button-open-rsvp">{t.openRsvp}</Link>
+            <Link className="btn btn-outline" href="/rsvp/lookup" data-testid="button-open-lookup"><Search size={18} /> {t.openLookup}</Link>
+          </div>
+        )}
 
         {event.showSummary && (
           <>

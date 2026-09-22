@@ -72,7 +72,8 @@ export const GetEventResponse = zod.object({
   "messageLabel": zod.string().max(getEventResponseMessageLabelMax).describe('Heading for the RSVP form\'s message box; empty hides the box'),
   "messagePlaceholder": zod.string().max(getEventResponseMessagePlaceholderMax),
   "showSummary": zod.boolean().describe('Whether the invitation shows guests the running attendance totals'),
-  "showAllRsvp": zod.boolean().describe('Whether the lookup page lists every RSVP for guests to filter, instead of searching one name at a time')
+  "showAllRsvp": zod.boolean().describe('Whether the lookup page lists every RSVP for guests to filter, instead of searching one name at a time'),
+  "rsvpClosed": zod.boolean().describe('Whether RSVPs are closed; guests then see only a closed notice and no RSVP data')
 })
 
 
@@ -135,7 +136,8 @@ export const UpdateEventBody = zod.object({
   "messageLabel": zod.string().max(updateEventBodyMessageLabelMax).describe('Heading for the RSVP form\'s message box; empty hides the box'),
   "messagePlaceholder": zod.string().max(updateEventBodyMessagePlaceholderMax),
   "showSummary": zod.boolean().describe('Whether the invitation shows guests the running attendance totals'),
-  "showAllRsvp": zod.boolean().describe('Whether the lookup page lists every RSVP for guests to filter, instead of searching one name at a time')
+  "showAllRsvp": zod.boolean().describe('Whether the lookup page lists every RSVP for guests to filter, instead of searching one name at a time'),
+  "rsvpClosed": zod.boolean().describe('Whether RSVPs are closed; guests then see only a closed notice and no RSVP data')
 })
 
 export const updateEventResponseThemeColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
@@ -189,7 +191,8 @@ export const UpdateEventResponse = zod.object({
   "messageLabel": zod.string().max(updateEventResponseMessageLabelMax).describe('Heading for the RSVP form\'s message box; empty hides the box'),
   "messagePlaceholder": zod.string().max(updateEventResponseMessagePlaceholderMax),
   "showSummary": zod.boolean().describe('Whether the invitation shows guests the running attendance totals'),
-  "showAllRsvp": zod.boolean().describe('Whether the lookup page lists every RSVP for guests to filter, instead of searching one name at a time')
+  "showAllRsvp": zod.boolean().describe('Whether the lookup page lists every RSVP for guests to filter, instead of searching one name at a time'),
+  "rsvpClosed": zod.boolean().describe('Whether RSVPs are closed; guests then see only a closed notice and no RSVP data')
 })
 
 

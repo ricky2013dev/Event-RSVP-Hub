@@ -41,6 +41,8 @@ export const eventsTable = pgTable("events", {
   showSummary: boolean("show_summary").notNull().default(true),
   // Whether the lookup page lists every RSVP for guests to filter, instead of searching one name at a time.
   showAllRsvp: boolean("show_all_rsvp").notNull().default(false),
+  // Whether RSVPs are closed; guests then see only a closed notice and no RSVP data.
+  rsvpClosed: boolean("rsvp_closed").notNull().default(false),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow()

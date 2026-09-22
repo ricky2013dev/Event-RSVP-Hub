@@ -139,6 +139,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "403":
+          description: RSVPs are closed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /rsvps/{id}:
     put:
       operationId: updateRsvp
@@ -278,6 +284,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "403":
+          description: RSVPs are closed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /rsvps/lookup:
     post:
       operationId: lookupRsvps
@@ -311,6 +323,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "403":
+          description: RSVPs are closed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /rsvps/confirmation/{token}:
     get:
       operationId: getRsvpConfirmation
@@ -331,6 +349,12 @@ paths:
                 $ref: "#/components/schemas/RsvpPublic"
         "404":
           description: Unknown token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: RSVPs are closed
           content:
             application/json:
               schema:
@@ -464,6 +488,9 @@ components:
         showAllRsvp:
           type: boolean
           description: Whether the lookup page lists every RSVP for guests to filter, instead of searching one name at a time
+        rsvpClosed:
+          type: boolean
+          description: Whether RSVPs are closed; guests then see only a closed notice and no RSVP data
       required:
         - title
         - subtitle
@@ -492,6 +519,7 @@ components:
         - messagePlaceholder
         - showSummary
         - showAllRsvp
+        - rsvpClosed
     HealthStatus:
       type: object
       properties:
@@ -580,6 +608,9 @@ components:
         showAllRsvp:
           type: boolean
           description: Whether the lookup page lists every RSVP for guests to filter, instead of searching one name at a time
+        rsvpClosed:
+          type: boolean
+          description: Whether RSVPs are closed; guests then see only a closed notice and no RSVP data
       required:
         - id
         - title
@@ -609,6 +640,7 @@ components:
         - messagePlaceholder
         - showSummary
         - showAllRsvp
+        - rsvpClosed
     RsvpTableInput:
       type: object
       properties:

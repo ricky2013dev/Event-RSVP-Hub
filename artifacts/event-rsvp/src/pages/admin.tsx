@@ -21,7 +21,7 @@ import { CARD_STYLES, useCardStyle } from '@/lib/card-styles';
 import { useDocumentTitle } from '@/lib/document-title';
 import { customTheme, THEMES, useTheme } from '@/lib/themes';
 
-type TextField = Exclude<keyof EventInput, 'capacity' | 'theme' | 'cardStyle' | 'themeColor' | 'themeAccent' | 'belongDeptOptions' | 'tableCount' | 'showSummary' | 'isFamilyType' | 'showAllRsvp'>;
+type TextField = Exclude<keyof EventInput, 'capacity' | 'theme' | 'cardStyle' | 'themeColor' | 'themeAccent' | 'belongDeptOptions' | 'tableCount' | 'showSummary' | 'isFamilyType' | 'showAllRsvp' | 'rsvpClosed'>;
 
 // What the editor previews live, before anything is saved.
 type LookPreview = Pick<EventInput, 'theme' | 'cardStyle' | 'themeColor' | 'themeAccent'>;
@@ -134,7 +134,7 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
     );
   }
 
-  function check(key: 'showSummary' | 'isFamilyType' | 'showAllRsvp', label: string, hint: string) {
+  function check(key: 'showSummary' | 'isFamilyType' | 'showAllRsvp' | 'rsvpClosed', label: string, hint: string) {
     return (
       <label className="field field-check">
         <input type="checkbox" checked={form![key]} onChange={(e) => set(key, e.target.checked)} data-testid={`input-event-${key}`} />
@@ -350,6 +350,11 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
         </>)}
 
         {pane === 'rsvp' && (<>
+        <section className="admin-section">
+          <h2>접수 상태 <span className="admin-muted">RSVP를 계속 받을지 정해요</span></h2>
+          {check('rsvpClosed', 'RSVP 마감', '켜면 RSVP 페이지에 마감 안내만 보이고 등록 · 조회 · 명단은 모두 닫혀요. 관리자 화면은 그대로예요')}
+        </section>
+
         <section className="admin-section">
           <h2>접수 단위 <span className="admin-muted">누구 이름으로 접수받을지 정해요</span></h2>
           {check('isFamilyType', '가족 단위로 접수', '아빠·엄마 이름과 자녀를 받아요. 끄면 이름 한 칸만 받고 자녀 항목은 사라져요')}

@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS events (
   message_placeholder text NOT NULL DEFAULT '따뜻한 한마디를 남겨주세요.',
   show_summary        boolean NOT NULL DEFAULT true,
   show_all_rsvp       boolean NOT NULL DEFAULT false,
+  rsvp_closed         boolean NOT NULL DEFAULT false,
   updated_at          timestamptz NOT NULL DEFAULT now()
 );
 
@@ -69,6 +70,7 @@ ALTER TABLE events ADD COLUMN IF NOT EXISTS message_label       text NOT NULL DE
 ALTER TABLE events ADD COLUMN IF NOT EXISTS message_placeholder text NOT NULL DEFAULT '따뜻한 한마디를 남겨주세요.';
 ALTER TABLE events ADD COLUMN IF NOT EXISTS show_summary        boolean NOT NULL DEFAULT true;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS show_all_rsvp       boolean NOT NULL DEFAULT false;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS rsvp_closed         boolean NOT NULL DEFAULT false;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS updated_at          timestamptz NOT NULL DEFAULT now();
 
 -- ---------------------------------------------------------------------------

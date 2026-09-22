@@ -1,6 +1,6 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import type { Rsvp, RsvpChild } from "@workspace/db";
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Response } from "express";
 import {
   AssignRsvpTableBody,
   AssignRsvpTableParams,
@@ -58,6 +58,7 @@ const defaultEvent = {
   messagePlaceholder: "따뜻한 한마디를 남겨주세요.",
   showSummary: true,
   showAllRsvp: false,
+  rsvpClosed: false,
 };
 
 async function loadEvent() {
@@ -69,6 +70,13 @@ async function loadEvent() {
     .onConflictDoNothing()
     .returning();
   return created ?? (await db.select().from(eventsTable).where(eq(eventsTable.id, EVENT_ID)))[0]!;
+}
+
+// Once the admin closes RSVPs, guests can neither register nor read any RSVP back.
+async function refuseIfClosed(res: Response): Promise<boolean> {
+  const { rsvpClosed } = await loadEvent();
+  if (rsvpClosed) res.status(403).json({ error: "RSVPs are closed" });
+  return rsvpClosed;
 }
 
 router.get("/event", async (_req, res): Promise<void> => {
@@ -178,6 +186,7 @@ function lookupThrottled(ip: string): boolean {
 
 // Only published while the admin has the switch on; otherwise the names stay behind the lookup.
 router.get("/rsvps/all", async (_req, res): Promise<void> => {
+  if (await refuseIfClosed(res)) return;
   const event = await loadEvent();
   if (!event.showAllRsvp) {
     res.status(404).json({ error: "RSVP list is not published" });
@@ -195,6 +204,7 @@ router.get("/rsvps/all", async (_req, res): Promise<void> => {
 });
 
 router.post("/rsvps/lookup", async (req, res): Promise<void> => {
+  if (await refuseIfClosed(res)) return;
   if (lookupThrottled(req.ip ?? "unknown")) {
     res.status(429).json({ error: "Too many lookups" });
     return;
@@ -236,6 +246,7 @@ router.post("/rsvps/lookup", async (req, res): Promise<void> => {
 });
 
 router.get("/rsvps/confirmation/:token", async (req, res): Promise<void> => {
+  if (await refuseIfClosed(res)) return;
   const parsed = GetRsvpConfirmationParams.safeParse(req.params);
   const [rsvp] = parsed.success
     ? await db
@@ -304,6 +315,7 @@ async function rsvpValues(data: RsvpInput): Promise<{ error: string } | { values
 }
 
 router.post("/rsvps", async (req, res): Promise<void> => {
+  if (await refuseIfClosed(res)) return;
   const parsed = CreateRsvpBody.safeParse(req.body);
   if (!parsed.success) {
     req.log.warn({ errors: parsed.error.flatten() }, "Invalid RSVP submission");

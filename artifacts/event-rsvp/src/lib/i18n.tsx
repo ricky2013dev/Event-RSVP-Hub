@@ -118,6 +118,10 @@ const EN = {
   lookupListEmpty: 'Nobody has replied yet.',
 
   // Confirmation
+  // Shown on every RSVP page, and in place of the invitation's buttons, once the admin closes RSVPs.
+  closedTitle: 'RSVPs are closed',
+  closedLead: 'We are no longer taking RSVPs. Thank you for your interest.',
+
   notFoundTitle: 'We could not find that RSVP',
   notFoundLead: 'Check that the link is right, or look it up by name.',
   confirmedLookup: 'Your RSVP is confirmed.',
@@ -227,6 +231,9 @@ const KO: typeof EN = {
   lookupFilterPlaceholder: '이름 입력',
   lookupListCount: (n: number) => `${n}건`,
   lookupListEmpty: '아직 등록된 내역이 없어요.',
+
+  closedTitle: 'RSVP가 마감되었어요',
+  closedLead: '더 이상 RSVP를 받지 않아요. 관심 가져주셔서 감사합니다.',
 
   notFoundTitle: '등록 내용을 찾을 수 없어요',
   notFoundLead: '주소가 올바른지 확인하시거나 이름으로 다시 조회해 주세요.',

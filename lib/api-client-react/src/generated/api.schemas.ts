@@ -129,6 +129,8 @@ export interface EventInput {
   showSummary: boolean;
   /** Whether the lookup page lists every RSVP for guests to filter, instead of searching one name at a time */
   showAllRsvp: boolean;
+  /** Whether RSVPs are closed; guests then see only a closed notice and no RSVP data */
+  rsvpClosed: boolean;
 }
 
 export interface HealthStatus {
@@ -197,6 +199,8 @@ export interface Event {
   showSummary: boolean;
   /** Whether the lookup page lists every RSVP for guests to filter, instead of searching one name at a time */
   showAllRsvp: boolean;
+  /** Whether RSVPs are closed; guests then see only a closed notice and no RSVP data */
+  rsvpClosed: boolean;
 }
 
 export interface RsvpTableInput {
