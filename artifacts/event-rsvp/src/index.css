@@ -287,6 +287,15 @@ a.btn { text-decoration: none; }
 .lookup-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
 .lookup-row .btn { width: auto; min-height: 0; padding: 0 22px; }
 .match { display: flex; flex-direction: column; gap: 10px; }
+/* The published guest list: one tappable row per RSVP. It scrolls on its own so the
+   filter box above it stays in view however long the list gets. */
+.rsvp-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; max-height: min(52vh, 460px); overflow-y: auto; overscroll-behavior: contain; }
+.rsvp-list-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 13px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); text-align: left; }
+.rsvp-list-row:hover { border-color: var(--gold-soft); background: var(--tint); }
+.rsvp-list-row svg { flex: none; color: var(--gold); }
+.rsvp-list-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rsvp-list-name { font-size: .98rem; color: var(--ink); word-break: keep-all; }
+.rsvp-list-sub { overflow: hidden; font-size: .78rem; color: var(--muted); text-overflow: ellipsis; white-space: nowrap; }
 .done .family, .done .total-bar, .done .btn { align-self: stretch; }
 .done .footnote { margin: 4px 0 0; }
 
@@ -350,10 +359,6 @@ a.btn { text-decoration: none; }
 .notice { display: flex; align-items: center; gap: 6px; margin: 16px 0 0; padding: 10px 12px; border-radius: 10px; background: #eef6ec; color: #4c7a45; font-size: .88rem; }
 .admin-form .error { margin-top: 16px; }
 .sticky-save { position: sticky; bottom: 12px; margin-top: 16px; z-index: 5; }
-.rsvp-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.rsvp-list li { padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
-.rsvp-list-main { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.rsvp-list-message { margin: 6px 0 0; font-size: .88rem; color: var(--ink-soft); white-space: pre-line; }
 .pill { flex: none; padding: 3px 10px; border-radius: 999px; font-size: .78rem; background: var(--rose-soft); color: var(--rose-deep); }
 .pill.declined { background: var(--cream); color: var(--muted); }
 

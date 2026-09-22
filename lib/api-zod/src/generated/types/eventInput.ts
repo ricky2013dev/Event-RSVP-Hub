@@ -75,4 +75,6 @@ export interface EventInput {
   messagePlaceholder: string;
   /** Whether the invitation shows guests the running attendance totals */
   showSummary: boolean;
+  /** Whether the lookup page lists every RSVP for guests to filter, instead of searching one name at a time */
+  showAllRsvp: boolean;
 }

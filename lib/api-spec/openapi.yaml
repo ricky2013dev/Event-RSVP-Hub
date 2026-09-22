@@ -257,6 +257,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /rsvps/all:
+    get:
+      operationId: listPublicRsvps
+      tags: [event]
+      summary: List every RSVP for guests to browse
+      description: Returns the public details of every RSVP, for guests to filter in the browser. Available only while the event's showAllRsvp switch is on.
+      responses:
+        "200":
+          description: Every RSVP
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RsvpPublic"
+        "404":
+          description: The event does not publish its RSVP list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /rsvps/lookup:
     post:
       operationId: lookupRsvps
@@ -440,6 +461,9 @@ components:
         showSummary:
           type: boolean
           description: Whether the invitation shows guests the running attendance totals
+        showAllRsvp:
+          type: boolean
+          description: Whether the lookup page lists every RSVP for guests to filter, instead of searching one name at a time
       required:
         - title
         - subtitle
@@ -467,6 +491,7 @@ components:
         - messageLabel
         - messagePlaceholder
         - showSummary
+        - showAllRsvp
     HealthStatus:
       type: object
       properties:
@@ -552,6 +577,9 @@ components:
         showSummary:
           type: boolean
           description: Whether the invitation shows guests the running attendance totals
+        showAllRsvp:
+          type: boolean
+          description: Whether the lookup page lists every RSVP for guests to filter, instead of searching one name at a time
       required:
         - id
         - title
@@ -580,6 +608,7 @@ components:
         - messageLabel
         - messagePlaceholder
         - showSummary
+        - showAllRsvp
     RsvpTableInput:
       type: object
       properties:

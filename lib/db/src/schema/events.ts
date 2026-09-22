@@ -39,6 +39,8 @@ export const eventsTable = pgTable("events", {
   messagePlaceholder: text("message_placeholder").notNull().default("따뜻한 한마디를 남겨주세요."),
   // Whether the invitation shows guests the running attendance totals.
   showSummary: boolean("show_summary").notNull().default(true),
+  // Whether the lookup page lists every RSVP for guests to filter, instead of searching one name at a time.
+  showAllRsvp: boolean("show_all_rsvp").notNull().default(false),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow()

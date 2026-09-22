@@ -817,6 +817,84 @@ export const useAssignRsvpTable = <TError = ErrorType<Error>,
       return useMutation(getAssignRsvpTableMutationOptions(options));
     }
 
+export const getListPublicRsvpsUrl = () => {
+
+
+
+
+  return `/api/rsvps/all`
+}
+
+/**
+ * Returns the public details of every RSVP, for guests to filter in the browser. Available only while the event's showAllRsvp switch is on.
+ * @summary List every RSVP for guests to browse
+ */
+export const listPublicRsvps = async ( options?: Parameters<typeof customFetch>[1]): Promise<RsvpPublic[]> => {
+
+  return customFetch<RsvpPublic[]>(getListPublicRsvpsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPublicRsvpsQueryKey = () => {
+    return [
+    `/api/rsvps/all`
+    ] as const;
+    }
+
+
+export const getListPublicRsvpsQueryOptions = <TData = Awaited<ReturnType<typeof listPublicRsvps>>, TError = ErrorType<Error>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPublicRsvps>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPublicRsvpsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicRsvps>>> = ({ signal }) => listPublicRsvps({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicRsvps>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListPublicRsvpsQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicRsvps>>>
+export type ListPublicRsvpsQueryError = ErrorType<Error>
+
+
+/**
+ * @summary List every RSVP for guests to browse
+ */
+
+export function useListPublicRsvps<TData = Awaited<ReturnType<typeof listPublicRsvps>>, TError = ErrorType<Error>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPublicRsvps>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListPublicRsvpsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getLookupRsvpsUrl = () => {
 
 

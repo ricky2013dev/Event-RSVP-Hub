@@ -71,7 +71,8 @@ export const GetEventResponse = zod.object({
   "tableCount": zod.number().int().min(1).max(getEventResponseTableCountMax).describe('How many tables the seating board shows'),
   "messageLabel": zod.string().max(getEventResponseMessageLabelMax).describe('Heading for the RSVP form\'s message box; empty hides the box'),
   "messagePlaceholder": zod.string().max(getEventResponseMessagePlaceholderMax),
-  "showSummary": zod.boolean().describe('Whether the invitation shows guests the running attendance totals')
+  "showSummary": zod.boolean().describe('Whether the invitation shows guests the running attendance totals'),
+  "showAllRsvp": zod.boolean().describe('Whether the lookup page lists every RSVP for guests to filter, instead of searching one name at a time')
 })
 
 
@@ -133,7 +134,8 @@ export const UpdateEventBody = zod.object({
   "tableCount": zod.number().int().min(1).max(updateEventBodyTableCountMax).describe('How many tables the seating board shows'),
   "messageLabel": zod.string().max(updateEventBodyMessageLabelMax).describe('Heading for the RSVP form\'s message box; empty hides the box'),
   "messagePlaceholder": zod.string().max(updateEventBodyMessagePlaceholderMax),
-  "showSummary": zod.boolean().describe('Whether the invitation shows guests the running attendance totals')
+  "showSummary": zod.boolean().describe('Whether the invitation shows guests the running attendance totals'),
+  "showAllRsvp": zod.boolean().describe('Whether the lookup page lists every RSVP for guests to filter, instead of searching one name at a time')
 })
 
 export const updateEventResponseThemeColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
@@ -186,7 +188,8 @@ export const UpdateEventResponse = zod.object({
   "tableCount": zod.number().int().min(1).max(updateEventResponseTableCountMax).describe('How many tables the seating board shows'),
   "messageLabel": zod.string().max(updateEventResponseMessageLabelMax).describe('Heading for the RSVP form\'s message box; empty hides the box'),
   "messagePlaceholder": zod.string().max(updateEventResponseMessagePlaceholderMax),
-  "showSummary": zod.boolean().describe('Whether the invitation shows guests the running attendance totals')
+  "showSummary": zod.boolean().describe('Whether the invitation shows guests the running attendance totals'),
+  "showAllRsvp": zod.boolean().describe('Whether the lookup page lists every RSVP for guests to filter, instead of searching one name at a time')
 })
 
 
@@ -436,6 +439,40 @@ export const AssignRsvpTableResponse = zod.object({
   "message": zod.string().nullable(),
   "createdAt": zod.coerce.date()
 }).describe('Full RSVP record, admin only')
+
+
+/**
+ * Returns the public details of every RSVP, for guests to filter in the browser. Available only while the event's showAllRsvp switch is on.
+ * @summary List every RSVP for guests to browse
+ */
+export const listPublicRsvpsResponseChildrenItemNameMax = 50;
+
+export const listPublicRsvpsResponseChildrenItemAgeMin = 0;
+export const listPublicRsvpsResponseChildrenItemAgeMax = 30;
+
+export const listPublicRsvpsResponseTableNumberMax = 50;
+
+
+
+export const ListPublicRsvpsResponseItem = zod.object({
+  "confirmToken": zod.string(),
+  "fatherName": zod.string(),
+  "motherName": zod.string(),
+  "phoneNumberMasked": zod.string(),
+  "belongTeam": zod.string().nullable(),
+  "belongDept": zod.string().nullable(),
+  "children": zod.array(zod.object({
+  "name": zod.string().min(1).max(listPublicRsvpsResponseChildrenItemNameMax),
+  "age": zod.number().int().min(listPublicRsvpsResponseChildrenItemAgeMin).max(listPublicRsvpsResponseChildrenItemAgeMax)
+})),
+  "adultCount": zod.number().int(),
+  "childCount": zod.number().int(),
+  "totalMembers": zod.number().int(),
+  "tableNumber": zod.number().int().min(1).max(listPublicRsvpsResponseTableNumberMax).nullable().describe('Table the family is seated at; assigned by the admin only'),
+  "message": zod.string().nullable(),
+  "createdAt": zod.coerce.date()
+}).describe('What a family (or anyone who can look them up) can see; the phone number is masked')
+export const ListPublicRsvpsResponse = zod.array(ListPublicRsvpsResponseItem)
 
 
 /**

@@ -21,7 +21,7 @@ import { CARD_STYLES, useCardStyle } from '@/lib/card-styles';
 import { useDocumentTitle } from '@/lib/document-title';
 import { customTheme, THEMES, useTheme } from '@/lib/themes';
 
-type TextField = Exclude<keyof EventInput, 'capacity' | 'theme' | 'cardStyle' | 'themeColor' | 'themeAccent' | 'belongDeptOptions' | 'tableCount' | 'showSummary' | 'isFamilyType'>;
+type TextField = Exclude<keyof EventInput, 'capacity' | 'theme' | 'cardStyle' | 'themeColor' | 'themeAccent' | 'belongDeptOptions' | 'tableCount' | 'showSummary' | 'isFamilyType' | 'showAllRsvp'>;
 
 // What the editor previews live, before anything is saved.
 type LookPreview = Pick<EventInput, 'theme' | 'cardStyle' | 'themeColor' | 'themeAccent'>;
@@ -134,7 +134,7 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
     );
   }
 
-  function check(key: 'showSummary' | 'isFamilyType', label: string, hint: string) {
+  function check(key: 'showSummary' | 'isFamilyType' | 'showAllRsvp', label: string, hint: string) {
     return (
       <label className="field field-check">
         <input type="checkbox" checked={form![key]} onChange={(e) => set(key, e.target.checked)} data-testid={`input-event-${key}`} />
@@ -353,6 +353,11 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
         <section className="admin-section">
           <h2>접수 단위 <span className="admin-muted">누구 이름으로 접수받을지 정해요</span></h2>
           {check('isFamilyType', '가족 단위로 접수', '아빠·엄마 이름과 자녀를 받아요. 끄면 이름 한 칸만 받고 자녀 항목은 사라져요')}
+        </section>
+
+        <section className="admin-section">
+          <h2>예약 확인 방법 <span className="admin-muted">손님이 자기 예약을 어떻게 찾을지 정해요</span></h2>
+          {check('showAllRsvp', '등록 명단 공개', '확인 페이지에 등록된 이름을 모두 보여주고 검색창은 그 명단을 걸러줘요. 끄면 이름·전화번호로 조회만 해요')}
         </section>
 
         <section className="admin-section">

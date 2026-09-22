@@ -10,6 +10,7 @@ import {
   CreateRsvpResponse,
   GetEventResponse,
   GetRsvpSummaryResponse,
+  ListPublicRsvpsResponse,
   ListRsvpsResponse,
   GetRsvpConfirmationParams,
   GetRsvpConfirmationResponse,
@@ -56,6 +57,7 @@ const defaultEvent = {
   messageLabel: "축하 메시지",
   messagePlaceholder: "따뜻한 한마디를 남겨주세요.",
   showSummary: true,
+  showAllRsvp: false,
 };
 
 async function loadEvent() {
@@ -158,6 +160,10 @@ function normalizeName(name: string): string {
 const PHONE_TERM = /^[\d\s()+-]+$/;
 const PHONE_MIN_DIGITS = 4;
 
+// The browser filters the published list, so it has to arrive whole; this only keeps a
+// runaway guest list from being sent in one response.
+const PUBLIC_LIST_LIMIT = 500;
+
 const LOOKUP_WINDOW_MS = 60_000;
 const LOOKUP_LIMIT = 10;
 const lookupHits = new Map<string, number[]>();
@@ -169,6 +175,24 @@ function lookupThrottled(ip: string): boolean {
   lookupHits.set(ip, recent);
   return recent.length > LOOKUP_LIMIT;
 }
+
+// Only published while the admin has the switch on; otherwise the names stay behind the lookup.
+router.get("/rsvps/all", async (_req, res): Promise<void> => {
+  const event = await loadEvent();
+  if (!event.showAllRsvp) {
+    res.status(404).json({ error: "RSVP list is not published" });
+    return;
+  }
+
+  const rsvps = await db
+    .select()
+    .from(rsvpsTable)
+    .where(eq(rsvpsTable.eventId, EVENT_ID))
+    .orderBy(desc(rsvpsTable.createdAt))
+    .limit(PUBLIC_LIST_LIMIT);
+
+  res.json(ListPublicRsvpsResponse.parse(rsvps.map(toPublic)));
+});
 
 router.post("/rsvps/lookup", async (req, res): Promise<void> => {
   if (lookupThrottled(req.ip ?? "unknown")) {

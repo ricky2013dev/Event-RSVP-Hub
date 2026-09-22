@@ -110,6 +110,12 @@ const EN = {
   lookupToNew: 'Register instead',
   lookupFound: (n: number) => (n === 1 ? 'Found 1 RSVP.' : `Found ${n} RSVPs.`),
   lookupOpen: 'View details',
+  // Shown instead of the search box when the event publishes its whole guest list.
+  lookupListLead: 'Find your name in the list below, or type to narrow it down.',
+  lookupFilterField: 'Filter the list by name',
+  lookupFilterPlaceholder: 'Type a name to filter',
+  lookupListCount: (n: number) => (n === 1 ? '1 RSVP' : `${n} RSVPs`),
+  lookupListEmpty: 'Nobody has replied yet.',
 
   // Confirmation
   notFoundTitle: 'We could not find that RSVP',
@@ -216,6 +222,11 @@ const KO: typeof EN = {
   lookupToNew: '새로 등록하기',
   lookupFound: (n: number) => `${n}건을 찾았어요.`,
   lookupOpen: '등록 내용 보기',
+  lookupListLead: '아래 명단에서 본인 이름을 찾아 눌러주세요. 이름을 입력하면 명단이 걸러져요.',
+  lookupFilterField: '이름으로 명단 걸러보기',
+  lookupFilterPlaceholder: '이름 입력',
+  lookupListCount: (n: number) => `${n}건`,
+  lookupListEmpty: '아직 등록된 내역이 없어요.',
 
   notFoundTitle: '등록 내용을 찾을 수 없어요',
   notFoundLead: '주소가 올바른지 확인하시거나 이름으로 다시 조회해 주세요.',
