@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS events (
   table_count         integer NOT NULL DEFAULT 20,
   message_label       text NOT NULL DEFAULT '축하 메시지',
   message_placeholder text NOT NULL DEFAULT '따뜻한 한마디를 남겨주세요.',
+  language            text NOT NULL DEFAULT 'ko',
   show_summary        boolean NOT NULL DEFAULT true,
   show_all_rsvp       boolean NOT NULL DEFAULT false,
   rsvp_closed         boolean NOT NULL DEFAULT false,
@@ -68,6 +69,7 @@ ALTER TABLE events ADD COLUMN IF NOT EXISTS belong_dept_options jsonb NOT NULL D
 ALTER TABLE events ADD COLUMN IF NOT EXISTS table_count         integer NOT NULL DEFAULT 20;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS message_label       text NOT NULL DEFAULT '축하 메시지';
 ALTER TABLE events ADD COLUMN IF NOT EXISTS message_placeholder text NOT NULL DEFAULT '따뜻한 한마디를 남겨주세요.';
+ALTER TABLE events ADD COLUMN IF NOT EXISTS language            text NOT NULL DEFAULT 'ko';
 ALTER TABLE events ADD COLUMN IF NOT EXISTS show_summary        boolean NOT NULL DEFAULT true;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS show_all_rsvp       boolean NOT NULL DEFAULT false;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS rsvp_closed         boolean NOT NULL DEFAULT false;

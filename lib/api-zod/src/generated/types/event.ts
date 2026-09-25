@@ -7,6 +7,7 @@
  */
 import type { ChoiceOption } from './choiceOption';
 import type { EventCardStyle } from './eventCardStyle';
+import type { EventLanguage } from './eventLanguage';
 import type { EventTheme } from './eventTheme';
 
 export interface Event {
@@ -37,6 +38,7 @@ export interface Event {
      * @pattern ^#[0-9a-fA-F]{6}$
      */
   themeAccent: string;
+  language: EventLanguage;
   /** Family events ask for both parents and their children; otherwise one person registers alone */
   isFamilyType: boolean;
   /**

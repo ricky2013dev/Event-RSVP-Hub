@@ -49,6 +49,7 @@ const defaultEvent = {
   cardStyle: "classic",
   themeColor: "#d6848d",
   themeAccent: "#c9a24a",
+  language: "ko",
   isFamilyType: true,
   belongTeamLabel: "소속 팀",
   belongDeptLabel: "소속 부서",

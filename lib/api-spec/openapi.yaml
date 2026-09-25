@@ -386,6 +386,10 @@ components:
       type: string
       description: Card shape and ornaments for the invitation, chosen by the kind of event
       enum: [classic, dinner, birthday, party, performance, ceremony]
+    EventLanguage:
+      type: string
+      description: Language the guest pages are shown in; only the admin can change it
+      enum: [ko, en]
     AdminLoginInput:
       type: object
       properties:
@@ -453,6 +457,8 @@ components:
           type: string
           pattern: "^#[0-9a-fA-F]{6}$"
           description: Frame and detail colour of the "custom" theme
+        language:
+          $ref: "#/components/schemas/EventLanguage"
         isFamilyType:
           type: boolean
           description: Family events ask for both parents and their children; otherwise one person registers alone
@@ -510,6 +516,7 @@ components:
         - cardStyle
         - themeColor
         - themeAccent
+        - language
         - isFamilyType
         - belongTeamLabel
         - belongDeptLabel
@@ -573,6 +580,8 @@ components:
           type: string
           pattern: "^#[0-9a-fA-F]{6}$"
           description: Frame and detail colour of the "custom" theme
+        language:
+          $ref: "#/components/schemas/EventLanguage"
         isFamilyType:
           type: boolean
           description: Family events ask for both parents and their children; otherwise one person registers alone
@@ -631,6 +640,7 @@ components:
         - cardStyle
         - themeColor
         - themeAccent
+        - language
         - isFamilyType
         - belongTeamLabel
         - belongDeptLabel

@@ -4,7 +4,7 @@ import { getGetEventQueryKey, useGetEvent, type Event } from '@workspace/api-cli
 import { Corners, Flourish } from '@/components/ornaments';
 import { useCardStyle } from '@/lib/card-styles';
 import { useDocumentTitle } from '@/lib/document-title';
-import { LangSwitch, useLang } from '@/lib/i18n';
+import { useLang } from '@/lib/i18n';
 import { useTheme } from '@/lib/themes';
 
 // Layout for the standalone RSVP pages: themed card, no invitation header or event details.
@@ -20,10 +20,11 @@ export function RsvpShell({ children, showBack = true }: { children: (event: Eve
 
   return (
     <main className="page">
-      <div className="topbar">
-        {showBack && <Link className="topbar-link" href="/" data-testid="link-back-invitation"><ArrowLeft size={16} /> {t.back}</Link>}
-        <LangSwitch />
-      </div>
+      {showBack && (
+        <div className="topbar">
+          <Link className="topbar-link" href="/" data-testid="link-back-invitation"><ArrowLeft size={16} /> {t.back}</Link>
+        </div>
+      )}
       <article className="card rsvp-page">
         <Corners />
         {eventQuery.isLoading ? (

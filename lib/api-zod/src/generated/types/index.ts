@@ -13,6 +13,7 @@ export * from './error';
 export * from './event';
 export * from './eventCardStyle';
 export * from './eventInput';
+export * from './eventLanguage';
 export * from './eventTheme';
 export * from './healthStatus';
 export * from './rsvp';

@@ -9,7 +9,7 @@ import { Corners, Flourish } from '@/components/ornaments';
 import { hasAdminSession } from '@/lib/admin-session';
 import { useCardStyle, useCurrentCardStyle } from '@/lib/card-styles';
 import { useDocumentTitle } from '@/lib/document-title';
-import { LangProvider, LangSwitch, LOCALE, useLang, type Lang } from '@/lib/i18n';
+import { LangProvider, LOCALE, useLang, type Lang } from '@/lib/i18n';
 import { useTheme } from '@/lib/themes';
 import AdminPage from '@/pages/admin';
 import RsvpCompletePage from '@/pages/rsvp-complete';
@@ -78,7 +78,6 @@ function Invitation() {
           </div>
         </div>
       )}
-      <div className="topbar"><LangSwitch /></div>
       <article className="card" data-testid="invitation-card">
         <Corners />
 

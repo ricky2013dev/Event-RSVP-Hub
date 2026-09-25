@@ -21,7 +21,7 @@ import { CARD_STYLES, useCardStyle } from '@/lib/card-styles';
 import { useDocumentTitle } from '@/lib/document-title';
 import { customTheme, THEMES, useTheme } from '@/lib/themes';
 
-type TextField = Exclude<keyof EventInput, 'capacity' | 'theme' | 'cardStyle' | 'themeColor' | 'themeAccent' | 'belongDeptOptions' | 'tableCount' | 'showSummary' | 'isFamilyType' | 'showAllRsvp' | 'rsvpClosed'>;
+type TextField = Exclude<keyof EventInput, 'capacity' | 'theme' | 'cardStyle' | 'themeColor' | 'themeAccent' | 'language' | 'belongDeptOptions' | 'tableCount' | 'showSummary' | 'isFamilyType' | 'showAllRsvp' | 'rsvpClosed'>;
 
 // What the editor previews live, before anything is saved.
 type LookPreview = Pick<EventInput, 'theme' | 'cardStyle' | 'themeColor' | 'themeAccent'>;
@@ -315,6 +315,17 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
         </>)}
 
         {pane === 'invitation' && (<>
+        <section className="admin-section">
+          <h2>언어 <span className="admin-muted">손님 화면에 보일 언어를 정해요</span></h2>
+          <label className="field">
+            <span>화면 언어 <em>· 초대장과 RSVP 페이지의 안내 문구가 이 언어로 보여요. 직접 입력한 제목·설명은 그대로예요</em></span>
+            <select value={form.language} onChange={(e) => set('language', e.target.value as EventInput['language'])} data-testid="input-event-language">
+              <option value="ko">한국어</option>
+              <option value="en">English</option>
+            </select>
+          </label>
+        </section>
+
         <section className="admin-section">
           <h2>초대장 문구</h2>
           {text('subtitle', '머리말', { hint: '제목 위 작은 글씨' })}

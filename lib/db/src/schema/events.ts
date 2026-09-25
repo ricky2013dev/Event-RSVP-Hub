@@ -24,6 +24,8 @@ export const eventsTable = pgTable("events", {
   // The two colours the "custom" theme derives its whole palette from.
   themeColor: text("theme_color").notNull().default("#d6848d"),
   themeAccent: text("theme_accent").notNull().default("#c9a24a"),
+  // Language the guest pages are shown in ("ko" or "en"); only the admin can change it.
+  language: text("language").notNull().default("ko"),
   // Family events ask for two parents and their children; otherwise one person registers alone.
   isFamilyType: boolean("is_family_type").notNull().default(true),
   // Label for the RSVP form's team field; empty hides the field.

@@ -1,19 +1,9 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo } from 'react';
+import { getGetEventQueryKey, useGetEvent } from '@workspace/api-client-react';
 
-// The guest pages read in Korean by default and can be switched to English. The admin
-// pages are Korean only, so nothing under /admin uses any of this.
+// The guest pages read in whichever language the admin picked for the event; guests
+// cannot switch it. The admin pages are Korean only, so nothing under /admin uses any of this.
 export type Lang = 'en' | 'ko';
-
-const STORAGE_KEY = 'rsvp-lang';
-
-function storedLang(): Lang {
-  try {
-    return localStorage.getItem(STORAGE_KEY) === 'en' ? 'en' : 'ko';
-  } catch {
-    // Private windows and blocked site data throw here; Korean is the default anyway.
-    return 'ko';
-  }
-}
 
 const EN = {
   // Shell and shared
@@ -253,59 +243,23 @@ const COPY: Record<Lang, typeof EN> = { en: EN, ko: KO };
 // The locale the invitation's date and time are written in.
 export const LOCALE: Record<Lang, string> = { en: 'en-US', ko: 'ko-KR' };
 
-type LangValue = { lang: Lang; setLang: (lang: Lang) => void; t: typeof EN };
+type LangValue = { lang: Lang; t: typeof EN };
 
-const LangContext = createContext<LangValue>({ lang: 'ko', setLang: () => {}, t: KO });
+const LangContext = createContext<LangValue>({ lang: 'ko', t: KO });
 
+// Korean until the event loads, which is also the default for a new event.
 export function LangProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(storedLang);
+  const eventQuery = useGetEvent({ query: { queryKey: getGetEventQueryKey() } });
+  const lang: Lang = eventQuery.data?.language === 'en' ? 'en' : 'ko';
 
   useEffect(() => {
-    document.documentElement.lang = lang === 'ko' ? 'ko' : 'en';
+    document.documentElement.lang = lang;
   }, [lang]);
 
-  const setLang = useCallback((next: Lang) => {
-    setLangState(next);
-    try {
-      localStorage.setItem(STORAGE_KEY, next);
-    } catch {
-      // A guest who cannot store the choice still gets it for this visit.
-    }
-  }, []);
-
-  const value = useMemo(() => ({ lang, setLang, t: COPY[lang] }), [lang, setLang]);
+  const value = useMemo(() => ({ lang, t: COPY[lang] }), [lang]);
   return <LangContext.Provider value={value}>{children}</LangContext.Provider>;
 }
 
 export function useLang(): LangValue {
   return useContext(LangContext);
-}
-
-// Regional-indicator pairs. A platform without flag glyphs (Windows) falls back to
-// drawing the letters themselves — "US" and "KR" — which still reads correctly.
-const SWITCH: { id: Lang; flag: string; name: string }[] = [
-  { id: 'en', flag: '\u{1F1FA}\u{1F1F8}', name: 'English' },
-  { id: 'ko', flag: '\u{1F1F0}\u{1F1F7}', name: '한국어' },
-];
-
-export function LangSwitch() {
-  const { lang, setLang } = useLang();
-  return (
-    <div className="lang-switch" role="group" aria-label="Language">
-      {SWITCH.map(({ id, flag, name }) => (
-        <button
-          key={id}
-          type="button"
-          aria-pressed={lang === id}
-          aria-label={name}
-          title={name}
-          className={lang === id ? 'on' : ''}
-          onClick={() => setLang(id)}
-          data-testid={`button-lang-${id}`}
-        >
-          {flag}
-        </button>
-      ))}
-    </div>
-  );
 }

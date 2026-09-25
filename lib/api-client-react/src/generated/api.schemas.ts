@@ -36,6 +36,17 @@ export const EventCardStyle = {
   ceremony: 'ceremony',
 } as const;
 
+/**
+ * Language the guest pages are shown in; only the admin can change it
+ */
+export type EventLanguage = typeof EventLanguage[keyof typeof EventLanguage];
+
+
+export const EventLanguage = {
+  ko: 'ko',
+  en: 'en',
+} as const;
+
 export interface AdminLoginInput {
   password: string;
 }
@@ -95,6 +106,7 @@ export interface EventInput {
      * @pattern ^#[0-9a-fA-F]{6}$
      */
   themeAccent: string;
+  language: EventLanguage;
   /** Family events ask for both parents and their children; otherwise one person registers alone */
   isFamilyType: boolean;
   /**
@@ -165,6 +177,7 @@ export interface Event {
      * @pattern ^#[0-9a-fA-F]{6}$
      */
   themeAccent: string;
+  language: EventLanguage;
   /** Family events ask for both parents and their children; otherwise one person registers alone */
   isFamilyType: boolean;
   /**
