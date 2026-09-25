@@ -27,7 +27,7 @@ function RsvpForm({ event }: { event: Event }) {
   const [motherName, setMotherName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [belongTeam, setBelongTeam] = useState('');
-  const [belongDept, setBelongDept] = useState(() => event.belongDeptOptions[0]?.value ?? '');
+  const [belongDept, setBelongDept] = useState(() => event.belongDeptOptions?.[0]?.value ?? '');
   const [message, setMessage] = useState('');
   const [children, setChildren] = useState<ChildRow[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});

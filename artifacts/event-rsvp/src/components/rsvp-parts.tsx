@@ -36,12 +36,12 @@ export type FieldLabels = { isFamilyType: boolean; teamLabel: string; deptLabel:
 
 export function labelsFor(event: { isFamilyType: boolean; belongTeamLabel: string; belongDeptLabel: string; belongDeptOptions: ChoiceOption[]; messageLabel: string; childGroups: ChildGroup[] }): FieldLabels {
   return {
-    isFamilyType: event.isFamilyType,
-    childGroups: event.childGroups,
-    teamLabel: event.belongTeamLabel.trim(),
-    deptLabel: event.belongDeptLabel.trim(),
-    deptOptions: event.belongDeptOptions,
-    messageLabel: event.messageLabel.trim(),
+    isFamilyType: event.isFamilyType ?? true,
+    childGroups: Array.isArray(event.childGroups) ? event.childGroups : [],
+    teamLabel: (event.belongTeamLabel ?? '').trim(),
+    deptLabel: (event.belongDeptLabel ?? '').trim(),
+    deptOptions: Array.isArray(event.belongDeptOptions) ? event.belongDeptOptions : [],
+    messageLabel: (event.messageLabel ?? '').trim(),
   };
 }
 
