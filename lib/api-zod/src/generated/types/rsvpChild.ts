@@ -13,8 +13,14 @@ export interface RsvpChild {
      */
   name: string;
   /**
+     * Name of the child group the guest picked; empty when the event has no groups
+     * @maxLength 30
+     */
+  group?: string;
+  /**
+     * Only on children saved before the form asked for a group instead of an age
      * @minimum 0
      * @maximum 30
      */
-  age: number;
+  age?: number;
 }

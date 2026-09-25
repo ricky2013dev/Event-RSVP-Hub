@@ -481,6 +481,12 @@ components:
           minimum: 1
           maximum: 50
           description: How many tables the seating board shows
+        childGroups:
+          type: array
+          maxItems: 10
+          description: Groups the guest picks one of for each child
+          items:
+            $ref: "#/components/schemas/ChildGroup"
         messageLabel:
           type: string
           maxLength: 30
@@ -522,6 +528,7 @@ components:
         - belongDeptLabel
         - belongDeptOptions
         - tableCount
+        - childGroups
         - messageLabel
         - messagePlaceholder
         - showSummary
@@ -604,6 +611,12 @@ components:
           minimum: 1
           maximum: 50
           description: How many tables the seating board shows
+        childGroups:
+          type: array
+          maxItems: 10
+          description: Groups the guest picks one of for each child
+          items:
+            $ref: "#/components/schemas/ChildGroup"
         messageLabel:
           type: string
           maxLength: 30
@@ -646,6 +659,7 @@ components:
         - belongDeptLabel
         - belongDeptOptions
         - tableCount
+        - childGroups
         - messageLabel
         - messagePlaceholder
         - showSummary
@@ -675,6 +689,26 @@ components:
       required:
         - value
         - label
+    ChildGroup:
+      type: object
+      description: A group the guest picks for a child; its ages are shown beside the name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 30
+        minAge:
+          type: integer
+          minimum: 0
+          maximum: 30
+        maxAge:
+          type: integer
+          minimum: 0
+          maximum: 30
+      required:
+        - name
+        - minAge
+        - maxAge
     RsvpChild:
       type: object
       properties:
@@ -682,13 +716,17 @@ components:
           type: string
           minLength: 1
           maxLength: 50
+        group:
+          type: string
+          maxLength: 30
+          description: Name of the child group the guest picked; empty when the event has no groups
         age:
           type: integer
           minimum: 0
           maximum: 30
+          description: Only on children saved before the form asked for a group instead of an age
       required:
         - name
-        - age
     RsvpPublic:
       type: object
       description: What a family (or anyone who can look them up) can see; the phone number is masked

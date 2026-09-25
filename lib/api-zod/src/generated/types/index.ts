@@ -8,6 +8,7 @@
 
 export * from './adminLoginInput';
 export * from './adminSession';
+export * from './childGroup';
 export * from './choiceOption';
 export * from './error';
 export * from './event';

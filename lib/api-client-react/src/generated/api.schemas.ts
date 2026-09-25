@@ -72,6 +72,27 @@ export interface ChoiceOption {
   label: string;
 }
 
+/**
+ * A group the guest picks for a child; its ages are shown beside the name
+ */
+export interface ChildGroup {
+  /**
+     * @minLength 1
+     * @maxLength 30
+     */
+  name: string;
+  /**
+     * @minimum 0
+     * @maximum 30
+     */
+  minAge: number;
+  /**
+     * @minimum 0
+     * @maximum 30
+     */
+  maxAge: number;
+}
+
 export interface EventInput {
   /** @minLength 1 */
   title: string;
@@ -130,6 +151,11 @@ export interface EventInput {
      * @maximum 50
      */
   tableCount: number;
+  /**
+     * Groups the guest picks one of for each child
+     * @maxItems 10
+     */
+  childGroups: ChildGroup[];
   /**
      * Heading for the RSVP form's message box; empty hides the box
      * @maxLength 30
@@ -202,6 +228,11 @@ export interface Event {
      */
   tableCount: number;
   /**
+     * Groups the guest picks one of for each child
+     * @maxItems 10
+     */
+  childGroups: ChildGroup[];
+  /**
      * Heading for the RSVP form's message box; empty hides the box
      * @maxLength 30
      */
@@ -232,10 +263,16 @@ export interface RsvpChild {
      */
   name: string;
   /**
+     * Name of the child group the guest picked; empty when the event has no groups
+     * @maxLength 30
+     */
+  group?: string;
+  /**
+     * Only on children saved before the form asked for a group instead of an age
      * @minimum 0
      * @maximum 30
      */
-  age: number;
+  age?: number;
 }
 
 /**

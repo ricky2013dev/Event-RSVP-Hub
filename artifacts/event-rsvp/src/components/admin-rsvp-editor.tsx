@@ -1,17 +1,15 @@
 import { useState } from 'react';
 import { Plus, Trash2, X } from 'lucide-react';
-import { ApiError, useCreateRsvp, useUpdateRsvp, type ChoiceOption, type Rsvp } from '@workspace/api-client-react';
+import { ApiError, useCreateRsvp, useUpdateRsvp, type ChildGroup, type ChoiceOption, type Rsvp } from '@workspace/api-client-react';
 import { formatPhone } from '@/components/rsvp-parts';
-
-type ChildRow = { key: string; name: string; age: string };
+import { childRowFrom, groupLabel, newChildRow, toChild, type ChildRow } from '@/lib/child-groups';
 
 const MAX_CHILDREN = 10;
-const newKey = () => Math.random().toString(36).slice(2);
 
 // Families the admin types in never filled the form themselves, so the note says where the entry came from.
 export const ADMIN_NOTE = '관리자 등록';
 
-export type EditorLabels = { isFamilyType: boolean; teamLabel: string; deptLabel: string; deptOptions: ChoiceOption[]; messageLabel: string };
+export type EditorLabels = { isFamilyType: boolean; teamLabel: string; deptLabel: string; deptOptions: ChoiceOption[]; messageLabel: string; childGroups: ChildGroup[] };
 
 type Props = {
   // null opens the editor empty, to register a family that never sent an RSVP.
@@ -31,7 +29,7 @@ export function AdminRsvpEditor({ rsvp, labels, onClose, onSaved, onSignedOut }:
   const [belongDept, setBelongDept] = useState(rsvp?.belongDept ?? '');
   const [belongTeam, setBelongTeam] = useState(rsvp?.belongTeam ?? '');
   const [message, setMessage] = useState(rsvp?.message ?? '');
-  const [children, setChildren] = useState<ChildRow[]>((rsvp?.children ?? []).map((child) => ({ key: newKey(), name: child.name, age: String(child.age) })));
+  const [children, setChildren] = useState<ChildRow[]>((rsvp?.children ?? []).map(childRowFrom));
   const [error, setError] = useState('');
 
   const creating = rsvp === null;
@@ -39,18 +37,18 @@ export function AdminRsvpEditor({ rsvp, labels, onClose, onSaved, onSignedOut }:
   const deptAsText = labels.deptOptions.length === 0;
   const { isFamilyType } = labels;
 
-  function updateChild(key: string, patch: Partial<ChildRow>) {
-    setChildren((rows) => rows.map((row) => (row.key === key ? { ...row, ...patch } : row)));
+  function updateChild(key: string, change: (row: ChildRow) => ChildRow) {
+    setChildren((rows) => rows.map((row) => (row.key === key ? change(row) : row)));
   }
 
   function save(formEvent: React.FormEvent<HTMLFormElement>) {
     formEvent.preventDefault();
     if (!fatherName.trim() && !motherName.trim()) return setError(isFamilyType ? '아빠 또는 엄마 이름 중 최소 한 분은 입력해 주세요.' : '이름을 입력해 주세요.');
     if (isFamilyType) {
-      if (children.some((child) => !child.name.trim() || !child.age.trim())) return setError('자녀의 이름과 나이를 모두 입력하거나 그 칸을 삭제해 주세요.');
-      if (children.some((child) => !Number.isInteger(Number(child.age)) || Number(child.age) < 0 || Number(child.age) > 30)) {
-        return setError('나이는 0살에서 30살 사이로 입력해 주세요.');
-      }
+      if (children.some((child) => !child.name.trim())) return setError('자녀의 이름을 입력하거나 그 칸을 삭제해 주세요.');
+      // Older children have no group, and a renamed group no longer matches, so both need picking again.
+      const groupNames = new Set(labels.childGroups.map((group) => group.name));
+      if (groupNames.size > 0 && children.some((child) => !groupNames.has(child.group))) return setError('자녀마다 그룹을 선택해 주세요.');
     }
 
     setError('');
@@ -61,7 +59,7 @@ export function AdminRsvpEditor({ rsvp, labels, onClose, onSaved, onSignedOut }:
       phoneNumber: phoneNumber.trim() || null,
       belongDept: belongDept.trim() || null,
       belongTeam: belongTeam.trim() || null,
-      children: isFamilyType ? children.map((child) => ({ name: child.name.trim(), age: Number(child.age) })) : [],
+      children: isFamilyType ? children.map((child) => toChild(child)) : [],
       message: creating ? [note, ADMIN_NOTE].filter(Boolean).join(' · ').slice(0, 500) : note || null,
     };
     const onError = (saveError: unknown) => {
@@ -121,13 +119,18 @@ export function AdminRsvpEditor({ rsvp, labels, onClose, onSaved, onSignedOut }:
             <span>자녀 <em>{children.length}명</em></span>
             {children.map((child, index) => (
               <div className="option-row" key={child.key}>
-                <input value={child.name} maxLength={50} placeholder="이름" onChange={(e) => updateChild(child.key, { name: e.target.value })} data-testid={`input-edit-child-name-${index}`} />
-                <input type="number" min={0} max={30} inputMode="numeric" placeholder="나이" value={child.age} onChange={(e) => updateChild(child.key, { age: e.target.value })} data-testid={`input-edit-child-age-${index}`} />
+                <input value={child.name} maxLength={50} placeholder="이름" onChange={(e) => updateChild(child.key, (row) => ({ ...row, name: e.target.value }))} data-testid={`input-edit-child-name-${index}`} />
+                {labels.childGroups.length > 0 && (
+                  <select value={child.group} onChange={(e) => updateChild(child.key, (row) => ({ ...row, group: e.target.value }))} data-testid={`select-edit-child-group-${index}`}>
+                    <option value="" disabled>{child.age != null ? `그룹 선택 (${child.age}살)` : '그룹 선택'}</option>
+                    {labels.childGroups.map((group) => <option key={group.name} value={group.name}>{groupLabel(group, (min, max) => `${min}–${max}살`)}</option>)}
+                  </select>
+                )}
                 <button type="button" className="remove" onClick={() => setChildren((rows) => rows.filter((row) => row.key !== child.key))} data-testid={`button-remove-edit-child-${index}`}><Trash2 size={14} /> 삭제</button>
               </div>
             ))}
             {children.length < MAX_CHILDREN && (
-              <button type="button" className="btn btn-dashed" onClick={() => setChildren((rows) => [...rows, { key: newKey(), name: '', age: '' }])} data-testid="button-add-edit-child"><Plus size={16} /> 자녀 추가</button>
+              <button type="button" className="btn btn-dashed" onClick={() => setChildren((rows) => [...rows, newChildRow()])} data-testid="button-add-edit-child"><Plus size={16} /> 자녀 추가</button>
             )}
           </div>
           )}

@@ -2,6 +2,16 @@ import { boolean, integer, jsonb, pgTable, serial, text, timestamp } from "drizz
 
 export type ChoiceOption = { value: string; label: string };
 
+// A group the guest picks for each child; its ages are shown beside the name.
+export type ChildGroup = { name: string; minAge: number; maxAge: number };
+
+export const DEFAULT_CHILD_GROUPS: ChildGroup[] = [
+  { name: "그룹 1", minAge: 0, maxAge: 3 },
+  { name: "그룹 2", minAge: 4, maxAge: 6 },
+  { name: "그룹 3", minAge: 7, maxAge: 10 },
+  { name: "그룹 4", minAge: 11, maxAge: 18 },
+];
+
 export const eventsTable = pgTable("events", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
@@ -36,6 +46,8 @@ export const eventsTable = pgTable("events", {
   belongDeptOptions: jsonb("belong_dept_options").$type<ChoiceOption[]>().notNull().default([]),
   // How many tables the seating board shows; the admin adds them one at a time.
   tableCount: integer("table_count").notNull().default(20),
+  // Groups the guest picks one of for each child, in the order they are offered.
+  childGroups: jsonb("child_groups").$type<ChildGroup[]>().notNull().default(DEFAULT_CHILD_GROUPS),
   // Heading and placeholder for the RSVP form's message box; an empty label hides it.
   messageLabel: text("message_label").notNull().default("축하 메시지"),
   messagePlaceholder: text("message_placeholder").notNull().default("따뜻한 한마디를 남겨주세요."),

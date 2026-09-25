@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ChildGroup } from './childGroup';
 import type { ChoiceOption } from './choiceOption';
 import type { EventCardStyle } from './eventCardStyle';
 import type { EventLanguage } from './eventLanguage';
@@ -68,6 +69,11 @@ export interface EventInput {
      * @maximum 50
      */
   tableCount: number;
+  /**
+     * Groups the guest picks one of for each child
+     * @maxItems 10
+     */
+  childGroups: ChildGroup[];
   /**
      * Heading for the RSVP form's message box; empty hides the box
      * @maxLength 30

@@ -3,7 +3,9 @@ import { createInsertSchema } from "drizzle-zod";
 import { integer, jsonb, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { z } from "zod/v4";
 
-export type RsvpChild = { name: string; age: number };
+// group is the name of the child group the guest picked. Children saved before the form
+// asked for a group have an age instead.
+export type RsvpChild = { name: string; group?: string; age?: number };
 
 export const rsvpsTable = pgTable("rsvps", {
   id: serial("id").primaryKey(),

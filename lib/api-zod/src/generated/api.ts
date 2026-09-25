@@ -35,6 +35,16 @@ export const getEventResponseBelongDeptOptionsMax = 20;
 
 export const getEventResponseTableCountMax = 50;
 
+export const getEventResponseChildGroupsItemNameMax = 30;
+
+export const getEventResponseChildGroupsItemMinAgeMin = 0;
+export const getEventResponseChildGroupsItemMinAgeMax = 30;
+
+export const getEventResponseChildGroupsItemMaxAgeMin = 0;
+export const getEventResponseChildGroupsItemMaxAgeMax = 30;
+
+export const getEventResponseChildGroupsMax = 10;
+
 export const getEventResponseMessageLabelMax = 30;
 
 export const getEventResponseMessagePlaceholderMax = 100;
@@ -70,6 +80,11 @@ export const GetEventResponse = zod.object({
   "label": zod.string().min(1).max(getEventResponseBelongDeptOptionsItemLabelMax)
 }).describe('One selectable option; the value is stored on the RSVP, the label is what guests see')).max(getEventResponseBelongDeptOptionsMax).describe('Choices for the department field; empty turns it back into a free-text box'),
   "tableCount": zod.number().int().min(1).max(getEventResponseTableCountMax).describe('How many tables the seating board shows'),
+  "childGroups": zod.array(zod.object({
+  "name": zod.string().min(1).max(getEventResponseChildGroupsItemNameMax),
+  "minAge": zod.number().int().min(getEventResponseChildGroupsItemMinAgeMin).max(getEventResponseChildGroupsItemMinAgeMax),
+  "maxAge": zod.number().int().min(getEventResponseChildGroupsItemMaxAgeMin).max(getEventResponseChildGroupsItemMaxAgeMax)
+}).describe('A group the guest picks for a child; its ages are shown beside the name')).max(getEventResponseChildGroupsMax).describe('Groups the guest picks one of for each child'),
   "messageLabel": zod.string().max(getEventResponseMessageLabelMax).describe('Heading for the RSVP form\'s message box; empty hides the box'),
   "messagePlaceholder": zod.string().max(getEventResponseMessagePlaceholderMax),
   "showSummary": zod.boolean().describe('Whether the invitation shows guests the running attendance totals'),
@@ -100,6 +115,16 @@ export const updateEventBodyBelongDeptOptionsItemLabelMax = 50;
 export const updateEventBodyBelongDeptOptionsMax = 20;
 
 export const updateEventBodyTableCountMax = 50;
+
+export const updateEventBodyChildGroupsItemNameMax = 30;
+
+export const updateEventBodyChildGroupsItemMinAgeMin = 0;
+export const updateEventBodyChildGroupsItemMinAgeMax = 30;
+
+export const updateEventBodyChildGroupsItemMaxAgeMin = 0;
+export const updateEventBodyChildGroupsItemMaxAgeMax = 30;
+
+export const updateEventBodyChildGroupsMax = 10;
 
 export const updateEventBodyMessageLabelMax = 30;
 
@@ -135,6 +160,11 @@ export const UpdateEventBody = zod.object({
   "label": zod.string().min(1).max(updateEventBodyBelongDeptOptionsItemLabelMax)
 }).describe('One selectable option; the value is stored on the RSVP, the label is what guests see')).max(updateEventBodyBelongDeptOptionsMax).describe('Choices for the department field; empty turns it back into a free-text box'),
   "tableCount": zod.number().int().min(1).max(updateEventBodyTableCountMax).describe('How many tables the seating board shows'),
+  "childGroups": zod.array(zod.object({
+  "name": zod.string().min(1).max(updateEventBodyChildGroupsItemNameMax),
+  "minAge": zod.number().int().min(updateEventBodyChildGroupsItemMinAgeMin).max(updateEventBodyChildGroupsItemMinAgeMax),
+  "maxAge": zod.number().int().min(updateEventBodyChildGroupsItemMaxAgeMin).max(updateEventBodyChildGroupsItemMaxAgeMax)
+}).describe('A group the guest picks for a child; its ages are shown beside the name')).max(updateEventBodyChildGroupsMax).describe('Groups the guest picks one of for each child'),
   "messageLabel": zod.string().max(updateEventBodyMessageLabelMax).describe('Heading for the RSVP form\'s message box; empty hides the box'),
   "messagePlaceholder": zod.string().max(updateEventBodyMessagePlaceholderMax),
   "showSummary": zod.boolean().describe('Whether the invitation shows guests the running attendance totals'),
@@ -155,6 +185,16 @@ export const updateEventResponseBelongDeptOptionsItemLabelMax = 50;
 export const updateEventResponseBelongDeptOptionsMax = 20;
 
 export const updateEventResponseTableCountMax = 50;
+
+export const updateEventResponseChildGroupsItemNameMax = 30;
+
+export const updateEventResponseChildGroupsItemMinAgeMin = 0;
+export const updateEventResponseChildGroupsItemMinAgeMax = 30;
+
+export const updateEventResponseChildGroupsItemMaxAgeMin = 0;
+export const updateEventResponseChildGroupsItemMaxAgeMax = 30;
+
+export const updateEventResponseChildGroupsMax = 10;
 
 export const updateEventResponseMessageLabelMax = 30;
 
@@ -191,6 +231,11 @@ export const UpdateEventResponse = zod.object({
   "label": zod.string().min(1).max(updateEventResponseBelongDeptOptionsItemLabelMax)
 }).describe('One selectable option; the value is stored on the RSVP, the label is what guests see')).max(updateEventResponseBelongDeptOptionsMax).describe('Choices for the department field; empty turns it back into a free-text box'),
   "tableCount": zod.number().int().min(1).max(updateEventResponseTableCountMax).describe('How many tables the seating board shows'),
+  "childGroups": zod.array(zod.object({
+  "name": zod.string().min(1).max(updateEventResponseChildGroupsItemNameMax),
+  "minAge": zod.number().int().min(updateEventResponseChildGroupsItemMinAgeMin).max(updateEventResponseChildGroupsItemMinAgeMax),
+  "maxAge": zod.number().int().min(updateEventResponseChildGroupsItemMaxAgeMin).max(updateEventResponseChildGroupsItemMaxAgeMax)
+}).describe('A group the guest picks for a child; its ages are shown beside the name')).max(updateEventResponseChildGroupsMax).describe('Groups the guest picks one of for each child'),
   "messageLabel": zod.string().max(updateEventResponseMessageLabelMax).describe('Heading for the RSVP form\'s message box; empty hides the box'),
   "messagePlaceholder": zod.string().max(updateEventResponseMessagePlaceholderMax),
   "showSummary": zod.boolean().describe('Whether the invitation shows guests the running attendance totals'),
@@ -219,6 +264,8 @@ export const AdminLoginResponse = zod.object({
  */
 export const listRsvpsResponseChildrenItemNameMax = 50;
 
+export const listRsvpsResponseChildrenItemGroupMax = 30;
+
 export const listRsvpsResponseChildrenItemAgeMin = 0;
 export const listRsvpsResponseChildrenItemAgeMax = 30;
 
@@ -237,7 +284,8 @@ export const ListRsvpsResponseItem = zod.object({
   "email": zod.string().nullable(),
   "children": zod.array(zod.object({
   "name": zod.string().min(1).max(listRsvpsResponseChildrenItemNameMax),
-  "age": zod.number().int().min(listRsvpsResponseChildrenItemAgeMin).max(listRsvpsResponseChildrenItemAgeMax)
+  "group": zod.string().max(listRsvpsResponseChildrenItemGroupMax).optional().describe('Name of the child group the guest picked; empty when the event has no groups'),
+  "age": zod.number().int().min(listRsvpsResponseChildrenItemAgeMin).max(listRsvpsResponseChildrenItemAgeMax).optional().describe('Only on children saved before the form asked for a group instead of an age')
 })),
   "adultCount": zod.number().int(),
   "childCount": zod.number().int(),
@@ -265,6 +313,8 @@ export const createRsvpBodyBelongDeptMax = 50;
 
 export const createRsvpBodyChildrenItemNameMax = 50;
 
+export const createRsvpBodyChildrenItemGroupMax = 30;
+
 export const createRsvpBodyChildrenItemAgeMin = 0;
 export const createRsvpBodyChildrenItemAgeMax = 30;
 
@@ -282,12 +332,15 @@ export const CreateRsvpBody = zod.object({
   "belongDept": zod.string().max(createRsvpBodyBelongDeptMax).nullish(),
   "children": zod.array(zod.object({
   "name": zod.string().min(1).max(createRsvpBodyChildrenItemNameMax),
-  "age": zod.number().int().min(createRsvpBodyChildrenItemAgeMin).max(createRsvpBodyChildrenItemAgeMax)
+  "group": zod.string().max(createRsvpBodyChildrenItemGroupMax).optional().describe('Name of the child group the guest picked; empty when the event has no groups'),
+  "age": zod.number().int().min(createRsvpBodyChildrenItemAgeMin).max(createRsvpBodyChildrenItemAgeMax).optional().describe('Only on children saved before the form asked for a group instead of an age')
 })).max(createRsvpBodyChildrenMax),
   "message": zod.string().max(createRsvpBodyMessageMax).nullish()
 })
 
 export const createRsvpResponseChildrenItemNameMax = 50;
+
+export const createRsvpResponseChildrenItemGroupMax = 30;
 
 export const createRsvpResponseChildrenItemAgeMin = 0;
 export const createRsvpResponseChildrenItemAgeMax = 30;
@@ -305,7 +358,8 @@ export const CreateRsvpResponse = zod.object({
   "belongDept": zod.string().nullable(),
   "children": zod.array(zod.object({
   "name": zod.string().min(1).max(createRsvpResponseChildrenItemNameMax),
-  "age": zod.number().int().min(createRsvpResponseChildrenItemAgeMin).max(createRsvpResponseChildrenItemAgeMax)
+  "group": zod.string().max(createRsvpResponseChildrenItemGroupMax).optional().describe('Name of the child group the guest picked; empty when the event has no groups'),
+  "age": zod.number().int().min(createRsvpResponseChildrenItemAgeMin).max(createRsvpResponseChildrenItemAgeMax).optional().describe('Only on children saved before the form asked for a group instead of an age')
 })),
   "adultCount": zod.number().int(),
   "childCount": zod.number().int(),
@@ -336,6 +390,8 @@ export const updateRsvpBodyBelongDeptMax = 50;
 
 export const updateRsvpBodyChildrenItemNameMax = 50;
 
+export const updateRsvpBodyChildrenItemGroupMax = 30;
+
 export const updateRsvpBodyChildrenItemAgeMin = 0;
 export const updateRsvpBodyChildrenItemAgeMax = 30;
 
@@ -353,12 +409,15 @@ export const UpdateRsvpBody = zod.object({
   "belongDept": zod.string().max(updateRsvpBodyBelongDeptMax).nullish(),
   "children": zod.array(zod.object({
   "name": zod.string().min(1).max(updateRsvpBodyChildrenItemNameMax),
-  "age": zod.number().int().min(updateRsvpBodyChildrenItemAgeMin).max(updateRsvpBodyChildrenItemAgeMax)
+  "group": zod.string().max(updateRsvpBodyChildrenItemGroupMax).optional().describe('Name of the child group the guest picked; empty when the event has no groups'),
+  "age": zod.number().int().min(updateRsvpBodyChildrenItemAgeMin).max(updateRsvpBodyChildrenItemAgeMax).optional().describe('Only on children saved before the form asked for a group instead of an age')
 })).max(updateRsvpBodyChildrenMax),
   "message": zod.string().max(updateRsvpBodyMessageMax).nullish()
 })
 
 export const updateRsvpResponseChildrenItemNameMax = 50;
+
+export const updateRsvpResponseChildrenItemGroupMax = 30;
 
 export const updateRsvpResponseChildrenItemAgeMin = 0;
 export const updateRsvpResponseChildrenItemAgeMax = 30;
@@ -378,7 +437,8 @@ export const UpdateRsvpResponse = zod.object({
   "email": zod.string().nullable(),
   "children": zod.array(zod.object({
   "name": zod.string().min(1).max(updateRsvpResponseChildrenItemNameMax),
-  "age": zod.number().int().min(updateRsvpResponseChildrenItemAgeMin).max(updateRsvpResponseChildrenItemAgeMax)
+  "group": zod.string().max(updateRsvpResponseChildrenItemGroupMax).optional().describe('Name of the child group the guest picked; empty when the event has no groups'),
+  "age": zod.number().int().min(updateRsvpResponseChildrenItemAgeMin).max(updateRsvpResponseChildrenItemAgeMax).optional().describe('Only on children saved before the form asked for a group instead of an age')
 })),
   "adultCount": zod.number().int(),
   "childCount": zod.number().int(),
@@ -418,6 +478,8 @@ export const AssignRsvpTableBody = zod.object({
 
 export const assignRsvpTableResponseChildrenItemNameMax = 50;
 
+export const assignRsvpTableResponseChildrenItemGroupMax = 30;
+
 export const assignRsvpTableResponseChildrenItemAgeMin = 0;
 export const assignRsvpTableResponseChildrenItemAgeMax = 30;
 
@@ -436,7 +498,8 @@ export const AssignRsvpTableResponse = zod.object({
   "email": zod.string().nullable(),
   "children": zod.array(zod.object({
   "name": zod.string().min(1).max(assignRsvpTableResponseChildrenItemNameMax),
-  "age": zod.number().int().min(assignRsvpTableResponseChildrenItemAgeMin).max(assignRsvpTableResponseChildrenItemAgeMax)
+  "group": zod.string().max(assignRsvpTableResponseChildrenItemGroupMax).optional().describe('Name of the child group the guest picked; empty when the event has no groups'),
+  "age": zod.number().int().min(assignRsvpTableResponseChildrenItemAgeMin).max(assignRsvpTableResponseChildrenItemAgeMax).optional().describe('Only on children saved before the form asked for a group instead of an age')
 })),
   "adultCount": zod.number().int(),
   "childCount": zod.number().int(),
@@ -452,6 +515,8 @@ export const AssignRsvpTableResponse = zod.object({
  * @summary List every RSVP for guests to browse
  */
 export const listPublicRsvpsResponseChildrenItemNameMax = 50;
+
+export const listPublicRsvpsResponseChildrenItemGroupMax = 30;
 
 export const listPublicRsvpsResponseChildrenItemAgeMin = 0;
 export const listPublicRsvpsResponseChildrenItemAgeMax = 30;
@@ -469,7 +534,8 @@ export const ListPublicRsvpsResponseItem = zod.object({
   "belongDept": zod.string().nullable(),
   "children": zod.array(zod.object({
   "name": zod.string().min(1).max(listPublicRsvpsResponseChildrenItemNameMax),
-  "age": zod.number().int().min(listPublicRsvpsResponseChildrenItemAgeMin).max(listPublicRsvpsResponseChildrenItemAgeMax)
+  "group": zod.string().max(listPublicRsvpsResponseChildrenItemGroupMax).optional().describe('Name of the child group the guest picked; empty when the event has no groups'),
+  "age": zod.number().int().min(listPublicRsvpsResponseChildrenItemAgeMin).max(listPublicRsvpsResponseChildrenItemAgeMax).optional().describe('Only on children saved before the form asked for a group instead of an age')
 })),
   "adultCount": zod.number().int(),
   "childCount": zod.number().int(),
@@ -495,6 +561,8 @@ export const LookupRsvpsBody = zod.object({
 
 export const lookupRsvpsResponseChildrenItemNameMax = 50;
 
+export const lookupRsvpsResponseChildrenItemGroupMax = 30;
+
 export const lookupRsvpsResponseChildrenItemAgeMin = 0;
 export const lookupRsvpsResponseChildrenItemAgeMax = 30;
 
@@ -511,7 +579,8 @@ export const LookupRsvpsResponseItem = zod.object({
   "belongDept": zod.string().nullable(),
   "children": zod.array(zod.object({
   "name": zod.string().min(1).max(lookupRsvpsResponseChildrenItemNameMax),
-  "age": zod.number().int().min(lookupRsvpsResponseChildrenItemAgeMin).max(lookupRsvpsResponseChildrenItemAgeMax)
+  "group": zod.string().max(lookupRsvpsResponseChildrenItemGroupMax).optional().describe('Name of the child group the guest picked; empty when the event has no groups'),
+  "age": zod.number().int().min(lookupRsvpsResponseChildrenItemAgeMin).max(lookupRsvpsResponseChildrenItemAgeMax).optional().describe('Only on children saved before the form asked for a group instead of an age')
 })),
   "adultCount": zod.number().int(),
   "childCount": zod.number().int(),
@@ -532,6 +601,8 @@ export const GetRsvpConfirmationParams = zod.object({
 
 export const getRsvpConfirmationResponseChildrenItemNameMax = 50;
 
+export const getRsvpConfirmationResponseChildrenItemGroupMax = 30;
+
 export const getRsvpConfirmationResponseChildrenItemAgeMin = 0;
 export const getRsvpConfirmationResponseChildrenItemAgeMax = 30;
 
@@ -548,7 +619,8 @@ export const GetRsvpConfirmationResponse = zod.object({
   "belongDept": zod.string().nullable(),
   "children": zod.array(zod.object({
   "name": zod.string().min(1).max(getRsvpConfirmationResponseChildrenItemNameMax),
-  "age": zod.number().int().min(getRsvpConfirmationResponseChildrenItemAgeMin).max(getRsvpConfirmationResponseChildrenItemAgeMax)
+  "group": zod.string().max(getRsvpConfirmationResponseChildrenItemGroupMax).optional().describe('Name of the child group the guest picked; empty when the event has no groups'),
+  "age": zod.number().int().min(getRsvpConfirmationResponseChildrenItemAgeMin).max(getRsvpConfirmationResponseChildrenItemAgeMax).optional().describe('Only on children saved before the form asked for a group instead of an age')
 })),
   "adultCount": zod.number().int(),
   "childCount": zod.number().int(),

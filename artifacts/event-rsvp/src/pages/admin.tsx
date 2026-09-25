@@ -21,7 +21,7 @@ import { CARD_STYLES, useCardStyle } from '@/lib/card-styles';
 import { useDocumentTitle } from '@/lib/document-title';
 import { customTheme, THEMES, useTheme } from '@/lib/themes';
 
-type TextField = Exclude<keyof EventInput, 'capacity' | 'theme' | 'cardStyle' | 'themeColor' | 'themeAccent' | 'language' | 'belongDeptOptions' | 'tableCount' | 'showSummary' | 'isFamilyType' | 'showAllRsvp' | 'rsvpClosed'>;
+type TextField = Exclude<keyof EventInput, 'capacity' | 'theme' | 'cardStyle' | 'themeColor' | 'themeAccent' | 'language' | 'belongDeptOptions' | 'tableCount' | 'showSummary' | 'isFamilyType' | 'showAllRsvp' | 'rsvpClosed' | 'childGroups'>;
 
 // What the editor previews live, before anything is saved.
 type LookPreview = Pick<EventInput, 'theme' | 'cardStyle' | 'themeColor' | 'themeAccent'>;
@@ -39,6 +39,7 @@ const SETTINGS_PANES: { id: SettingsPane; name: string; icon: typeof Palette }[]
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
 const MAX_DEPT_OPTIONS = 20;
+const MAX_CHILD_GROUPS = 10;
 
 function toInput(event: Event): EventInput {
   const { id: _id, ...rest } = event;
@@ -111,6 +112,10 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
     setStatus(null);
   }
 
+  function setGroup(index: number, patch: Partial<EventInput['childGroups'][number]>) {
+    set('childGroups', form!.childGroups.map((group, at) => (at === index ? { ...group, ...patch } : group)));
+  }
+
   function text(key: TextField, label: string, options: { hint?: string; type?: string; multiline?: boolean } = {}) {
     return (
       <label className="field">
@@ -177,11 +182,20 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
       return reject('rsvp', '소속 부서 선택지의 저장 값이 중복됐어요.');
     }
 
+    // The guest picks a group by its name, so names must be unique; the ages are only shown beside it.
+    const groups = form!.childGroups.map((group) => ({ ...group, name: group.name.trim() }));
+    if (groups.some((group) => !group.name)) return reject('rsvp', '자녀 그룹 이름을 입력해 주세요.');
+    if (groups.some((group) => ![group.minAge, group.maxAge].every((age) => Number.isInteger(age) && age >= 0 && age <= 30) || group.minAge > group.maxAge)) {
+      return reject('rsvp', '자녀 그룹 나이는 0~30살이고, 시작 나이가 끝 나이보다 클 수 없어요.');
+    }
+    if (new Set(groups.map((group) => group.name)).size !== groups.length) return reject('rsvp', '자녀 그룹 이름이 중복됐어요.');
+
     updateEvent.mutate(
       {
         data: {
           ...form!,
           belongDeptOptions: options,
+          childGroups: groups,
           capacity: Math.max(0, Math.round(form!.capacity || 0)),
           tableCount: Math.min(50, Math.max(1, Math.round(form!.tableCount || 1))),
         },
@@ -371,6 +385,43 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
           {check('isFamilyType', '가족 단위로 접수', '아빠·엄마 이름과 자녀를 받아요. 끄면 이름 한 칸만 받고 자녀 항목은 사라져요')}
         </section>
 
+        {form.isFamilyType && (
+        <section className="admin-section">
+          <h2>자녀 그룹 <span className="admin-muted">손님이 자녀마다 고를 그룹을 정해요</span></h2>
+          <div className="admin-subsection">
+            <h3>그룹 <span className="admin-muted">RSVP 화면에서 자녀마다 이 중 하나를 골라요 · 나이는 그룹 이름 옆에 안내로만 보여요 · 그룹을 모두 지우면 자녀 이름만 받아요</span></h3>
+            {form.childGroups.map((group, index) => (
+              <div className="group-row" key={index}>
+                <label className="field">
+                  <span>그룹 이름</span>
+                  <input value={group.name} maxLength={30} onChange={(e) => setGroup(index, { name: e.target.value })} data-testid={`input-child-group-name-${index}`} />
+                </label>
+                <label className="field">
+                  <span>시작 나이</span>
+                  <input type="number" min={0} max={30} inputMode="numeric" value={group.minAge} onChange={(e) => setGroup(index, { minAge: Number(e.target.value) })} data-testid={`input-child-group-min-${index}`} />
+                </label>
+                <label className="field">
+                  <span>끝 나이</span>
+                  <input type="number" min={0} max={30} inputMode="numeric" value={group.maxAge} onChange={(e) => setGroup(index, { maxAge: Number(e.target.value) })} data-testid={`input-child-group-max-${index}`} />
+                </label>
+                <button type="button" className="remove" onClick={() => set('childGroups', form.childGroups.filter((_, at) => at !== index))} data-testid={`button-remove-child-group-${index}`}><Trash2 size={14} /> 삭제</button>
+              </div>
+            ))}
+            {form.childGroups.length < MAX_CHILD_GROUPS && (
+              <button
+                type="button"
+                className="btn btn-dashed"
+                onClick={() => {
+                  const from = form.childGroups.reduce((oldest, group) => Math.max(oldest, group.maxAge + 1), 0);
+                  set('childGroups', [...form.childGroups, { name: `그룹 ${form.childGroups.length + 1}`, minAge: Math.min(from, 30), maxAge: Math.min(from + 2, 30) }]);
+                }}
+                data-testid="button-add-child-group"
+              ><Plus size={16} /> 그룹 추가</button>
+            )}
+          </div>
+        </section>
+        )}
+
         <section className="admin-section">
           <h2>예약 확인 방법 <span className="admin-muted">손님이 자기 예약을 어떻게 찾을지 정해요</span></h2>
           {check('showAllRsvp', '등록 명단 공개', '확인 페이지에 등록된 이름을 모두 보여주고 검색창은 그 명단을 걸러줘요. 끄면 이름·전화번호로 조회만 해요')}
@@ -524,6 +575,7 @@ export default function AdminPage() {
             deptOptions={eventQuery.data?.belongDeptOptions ?? []}
             tableCount={eventQuery.data?.tableCount ?? 20}
             messageLabel={eventQuery.data?.messageLabel.trim() || '메시지'}
+            childGroups={eventQuery.data?.childGroups ?? []}
           />
         ) : tab === 'tables' ? (
           <AdminTables

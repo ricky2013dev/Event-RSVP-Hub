@@ -1,5 +1,5 @@
 import { and, desc, eq, sql } from "drizzle-orm";
-import type { Rsvp, RsvpChild } from "@workspace/db";
+import { DEFAULT_CHILD_GROUPS, type Rsvp, type RsvpChild } from "@workspace/db";
 import { Router, type IRouter, type Response } from "express";
 import {
   AssignRsvpTableBody,
@@ -55,6 +55,7 @@ const defaultEvent = {
   belongDeptLabel: "소속 부서",
   belongDeptOptions: [] as { value: string; label: string }[],
   tableCount: 20,
+  childGroups: DEFAULT_CHILD_GROUPS,
   messageLabel: "축하 메시지",
   messagePlaceholder: "따뜻한 한마디를 남겨주세요.",
   showSummary: true,
@@ -88,6 +89,11 @@ router.put("/event", requireAdmin, async (req, res): Promise<void> => {
   const parsed = UpdateEventBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  if (parsed.data.childGroups.some((group) => group.minAge > group.maxAge)) {
+    res.status(400).json({ error: "A child group's youngest age is above its oldest" });
     return;
   }
 
@@ -286,9 +292,12 @@ async function rsvpValues(data: RsvpInput): Promise<{ error: string } | { values
   // body are dropped rather than stored behind the admin's back.
   const fatherName = data.fatherName.trim();
   const motherName = event.isFamilyType ? data.motherName.trim() : "";
-  const children = event.isFamilyType ? data.children.map((child) => ({ name: child.name.trim(), age: child.age })) : [];
+  // Each child is stored with the group picked for it; an age is no longer asked for.
+  const children = event.isFamilyType ? data.children.map((child) => ({ name: child.name.trim(), group: (child.group ?? "").trim() })) : [];
   if (!fatherName && !motherName) return { error: event.isFamilyType ? "At least one parent name is required" : "A name is required" };
   if (children.some((child) => !child.name)) return { error: "Every child needs a name" };
+  const groupNames = new Set(event.childGroups.map((group) => group.name));
+  if (groupNames.size > 0 && children.some((child) => !groupNames.has(child.group))) return { error: "Every child needs one of the event's groups" };
 
   // When the admin has set choices, only those values are accepted for the department.
   const belongDept = data.belongDept?.trim() || null;

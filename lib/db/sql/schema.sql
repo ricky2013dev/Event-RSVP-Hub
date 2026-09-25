@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS events (
   belong_dept_label   text NOT NULL DEFAULT '소속 부서',
   belong_dept_options jsonb NOT NULL DEFAULT '[]'::jsonb,
   table_count         integer NOT NULL DEFAULT 20,
+  child_groups        jsonb NOT NULL DEFAULT '[{"name":"그룹 1","minAge":0,"maxAge":3},{"name":"그룹 2","minAge":4,"maxAge":6},{"name":"그룹 3","minAge":7,"maxAge":10},{"name":"그룹 4","minAge":11,"maxAge":18}]'::jsonb,
   message_label       text NOT NULL DEFAULT '축하 메시지',
   message_placeholder text NOT NULL DEFAULT '따뜻한 한마디를 남겨주세요.',
   language            text NOT NULL DEFAULT 'ko',
@@ -67,6 +68,7 @@ ALTER TABLE events ADD COLUMN IF NOT EXISTS belong_team_label   text NOT NULL DE
 ALTER TABLE events ADD COLUMN IF NOT EXISTS belong_dept_label   text NOT NULL DEFAULT '소속 부서';
 ALTER TABLE events ADD COLUMN IF NOT EXISTS belong_dept_options jsonb NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS table_count         integer NOT NULL DEFAULT 20;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS child_groups        jsonb NOT NULL DEFAULT '[{"name":"그룹 1","minAge":0,"maxAge":3},{"name":"그룹 2","minAge":4,"maxAge":6},{"name":"그룹 3","minAge":7,"maxAge":10},{"name":"그룹 4","minAge":11,"maxAge":18}]'::jsonb;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS message_label       text NOT NULL DEFAULT '축하 메시지';
 ALTER TABLE events ADD COLUMN IF NOT EXISTS message_placeholder text NOT NULL DEFAULT '따뜻한 한마디를 남겨주세요.';
 ALTER TABLE events ADD COLUMN IF NOT EXISTS language            text NOT NULL DEFAULT 'ko';

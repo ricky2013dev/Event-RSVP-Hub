@@ -11,12 +11,10 @@ import {
 import { Flourish } from '@/components/ornaments';
 import { FamilyDetails, formatPhone, labelsFor, RuledLabel, TotalBar } from '@/components/rsvp-parts';
 import { RsvpShell } from '@/components/rsvp-shell';
+import { newChildRow, toChild, type ChildRow } from '@/lib/child-groups';
 import { useLang } from '@/lib/i18n';
 
-type ChildRow = { key: string; name: string; age: string };
-
 const MAX_CHILDREN = 10;
-const newChildRow = (): ChildRow => ({ key: Math.random().toString(36).slice(2), name: '', age: '' });
 
 function RsvpForm({ event }: { event: Event }) {
   const [, navigate] = useLocation();
@@ -37,6 +35,8 @@ function RsvpForm({ event }: { event: Event }) {
 
   const labels = labelsFor(event);
   const { isFamilyType, teamLabel, deptLabel, deptOptions, messageLabel } = labels;
+  // With no groups set up, a child is just a name.
+  const hasGroups = labels.childGroups.length > 0;
   const deptAsText = Boolean(deptLabel) && deptOptions.length === 0;
   const deptRequired = Boolean(deptLabel) && deptOptions.length > 0;
 
@@ -46,13 +46,14 @@ function RsvpForm({ event }: { event: Event }) {
 
   // Only fully-filled child rows count, matching what the server stores.
   const completeChildren = useMemo(
-    () => children.filter((c) => c.name.trim() && c.age.trim()).map((c) => ({ name: c.name.trim(), age: Number(c.age) })),
-    [children],
+    () => children.filter((c) => c.name.trim() && (c.group || !hasGroups)).map((c) => toChild(c)),
+    [children, hasGroups],
   );
   const adultCount = (fatherName.trim() ? 1 : 0) + (motherName.trim() ? 1 : 0);
 
-  function updateChild(key: string, patch: Partial<ChildRow>) {
-    setChildren((rows) => rows.map((row) => (row.key === key ? { ...row, ...patch } : row)));
+  function updateChild(key: string, change: (row: ChildRow) => ChildRow) {
+    setChildren((rows) => rows.map((row) => (row.key === key ? change(row) : row)));
+    setErrors((x) => ({ ...x, [key]: '' }));
   }
 
   function review() {
@@ -61,11 +62,9 @@ function RsvpForm({ event }: { event: Event }) {
     if (deptRequired && !belongDept.trim()) next.belongDept = t.errChoose(deptLabel);
     if (isFamilyType) children.forEach((child, index) => {
       const name = child.name.trim();
-      const age = child.age.trim();
-      if (!name && !age) next[child.key] = t.errChildBlank;
+      if (!name && !child.group) next[child.key] = t.errChildBlank;
       else if (!name) next[child.key] = t.errChildName(index + 1);
-      else if (!age) next[child.key] = t.errChildAge(name);
-      else if (!Number.isInteger(Number(age)) || Number(age) < 0 || Number(age) > 30) next[child.key] = t.errChildAgeRange;
+      else if (hasGroups && !child.group) next[child.key] = t.errChildGroup(name);
     });
     setErrors(next);
     setSubmitError('');
@@ -179,8 +178,16 @@ function RsvpForm({ event }: { event: Event }) {
                 <button type="button" className="remove" onClick={() => setChildren((rows) => rows.filter((row) => row.key !== child.key))} data-testid={`button-remove-child-${index}`}><Trash2 size={14} /> {t.remove}</button>
               </div>
               <div className="child-cols">
-                <label className="field"><span>{t.childName}</span><input value={child.name} onChange={(e) => updateChild(child.key, { name: e.target.value })} placeholder={t.childNamePlaceholder} data-testid={`input-child-name-${index}`} /></label>
-                <label className="field"><span>{t.childAge}</span><input type="number" inputMode="numeric" min={0} max={30} value={child.age} onChange={(e) => updateChild(child.key, { age: e.target.value })} placeholder="7" data-testid={`input-child-age-${index}`} /></label>
+                <label className="field"><span>{t.childName}</span><input value={child.name} onChange={(e) => updateChild(child.key, (row) => ({ ...row, name: e.target.value }))} placeholder={t.childNamePlaceholder} data-testid={`input-child-name-${index}`} /></label>
+                {hasGroups && (
+                  <label className="field">
+                    <span>{t.childGroup} <em>{t.required}</em></span>
+                    <select required aria-invalid={Boolean(errors[child.key]) && !child.group} value={child.group} onChange={(e) => updateChild(child.key, (row) => ({ ...row, group: e.target.value }))} data-testid={`select-child-group-${index}`}>
+                      <option value="" disabled>{t.childGroupPick}</option>
+                      {labels.childGroups.map((group) => <option key={group.name} value={group.name}>{group.name}</option>)}
+                    </select>
+                  </label>
+                )}
               </div>
               {errors[child.key] && <p className="field-error">{errors[child.key]}</p>}
             </div>

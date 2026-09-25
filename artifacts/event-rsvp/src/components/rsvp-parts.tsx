@@ -1,5 +1,6 @@
 import { Users } from 'lucide-react';
-import type { ChoiceOption, RsvpChild } from '@workspace/api-client-react';
+import type { ChildGroup, ChoiceOption, RsvpChild } from '@workspace/api-client-react';
+import { childDetail } from '@/lib/child-groups';
 import { useLang } from '@/lib/i18n';
 
 // US numbers read as 972-555-0123; a Korean mobile (010…) as 010-1234-5678.
@@ -31,11 +32,12 @@ export type FamilySummary = {
   message?: string | null;
 };
 
-export type FieldLabels = { isFamilyType: boolean; teamLabel: string; deptLabel: string; deptOptions: ChoiceOption[]; messageLabel: string };
+export type FieldLabels = { isFamilyType: boolean; teamLabel: string; deptLabel: string; deptOptions: ChoiceOption[]; messageLabel: string; childGroups: ChildGroup[] };
 
-export function labelsFor(event: { isFamilyType: boolean; belongTeamLabel: string; belongDeptLabel: string; belongDeptOptions: ChoiceOption[]; messageLabel: string }): FieldLabels {
+export function labelsFor(event: { isFamilyType: boolean; belongTeamLabel: string; belongDeptLabel: string; belongDeptOptions: ChoiceOption[]; messageLabel: string; childGroups: ChildGroup[] }): FieldLabels {
   return {
     isFamilyType: event.isFamilyType,
+    childGroups: event.childGroups,
     teamLabel: event.belongTeamLabel.trim(),
     deptLabel: event.belongDeptLabel.trim(),
     deptOptions: event.belongDeptOptions,
@@ -65,7 +67,7 @@ export function FamilyDetails({ family, labels }: { family: FamilySummary; label
       {family.belongDept && <div><dt>{labels.deptLabel || t.deptFallback}</dt><dd>{optionLabel(labels.deptOptions, family.belongDept)}</dd></div>}
       {family.belongTeam && <div><dt>{labels.teamLabel || t.teamFallback}</dt><dd>{family.belongTeam}</dd></div>}
       {family.tableNumber != null && <div><dt>{t.table}</dt><dd data-testid="text-table-number">{t.tableNo(family.tableNumber)}</dd></div>}
-      {labels.isFamilyType && <div><dt>{t.childrenLabel}</dt><dd>{family.children.length === 0 ? t.none : family.children.map((child) => t.childWithAge(child.name, child.age)).join('\n')}</dd></div>}
+      {labels.isFamilyType && <div><dt>{t.childrenLabel}</dt><dd>{family.children.length === 0 ? t.none : family.children.map((child) => t.childWith(child.name, childDetail(child, t.years))).join('\n')}</dd></div>}
       {family.message && <div><dt>{labels.messageLabel || t.messageFallback}</dt><dd>{family.message}</dd></div>}
     </dl>
   );

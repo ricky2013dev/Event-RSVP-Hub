@@ -261,6 +261,7 @@ a.btn { text-decoration: none; }
 .choice:focus-within { border-color: var(--gold); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 15%, transparent); }
 .option-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; }
 .field-error { margin: 0; font-size: .85rem; color: #c65f6b; }
+.field select[aria-invalid='true'] { border-color: #c65f6b; }
 .hint-box { margin: 0; padding: 14px 16px; border-radius: 14px; background: var(--cream); font-size: .88rem; line-height: 1.6; color: var(--muted); }
 .hint-box.center { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
 .hint-box.center p { margin: 0; color: var(--ink-soft); }
@@ -270,7 +271,10 @@ a.btn { text-decoration: none; }
 .child-row-head svg { color: var(--gold); }
 .remove { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border: 0; border-radius: 8px; background: none; font-size: .78rem; color: #c65f6b; }
 .remove:hover { background: #fdeef0; }
-.child-cols { display: grid; grid-template-columns: 1fr 6rem; gap: 10px; }
+.child-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* Without child groups the name has the row to itself. */
+.child-cols > :only-child { grid-column: 1 / -1; }
+.group-row { display: grid; grid-template-columns: 1fr 4.5rem 4.5rem auto; gap: 8px; align-items: end; }
 .btn-dashed { min-height: 46px; border: 1px dashed var(--gold-soft); background: transparent; color: var(--gold); font-size: .95rem; }
 .btn-dashed:hover { background: var(--tint); }
 .btn-ghost { min-height: 46px; border: 0; background: transparent; color: var(--muted); font-size: .95rem; }
@@ -406,6 +410,9 @@ a.btn { text-decoration: none; }
 .admin-body > .admin-card { align-self: center; max-width: 620px; }
 .reservations { display: flex; flex-direction: column; gap: 18px; }
 .admin-stats { gap: 16px; }
+/* One card per child group under the totals, as many to a row as fit. */
+.admin-group-stats { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); margin-top: 12px; }
+.admin-group-stats .stat-label em { font-style: normal; opacity: .75; }
 .admin-stats .stat { padding: 20px 24px; border-radius: 18px; }
 .admin-stats .stat-label { font-size: .82rem; }
 .admin-stats .stat-value { margin-top: 10px; font-size: 2rem; }
@@ -548,6 +555,8 @@ a.btn { text-decoration: none; }
    viewport height and every vertical gap tightens, so tall phones still get a big
    photo while short ones give the space to the details and the buttons. */
 @media (max-width: 640px) {
+  .group-row { grid-template-columns: 1fr 1fr; }
+  .group-row > .field:first-child { grid-column: 1 / -1; }
   .page { padding: 6px 12px 12px; }
   .topbar { min-height: 0; margin-bottom: 4px; }
   .card { padding: 18px 16px 14px; --photo-size: clamp(88px, 14dvh, 190px); }
@@ -578,6 +587,7 @@ a.btn { text-decoration: none; }
   .toolbar .btn-small { padding: 0 12px; font-size: .85rem; }
   .admin-header h1 { font-size: 1.3rem; }
   .admin-stats { gap: 8px; }
+  .admin-group-stats { grid-template-columns: repeat(3, 1fr); margin-top: 8px; }
   .admin-stats .stat { padding: 14px 12px; }
   .admin-stats .stat-value { font-size: 1.4rem; }
   .tabs { align-self: stretch; }

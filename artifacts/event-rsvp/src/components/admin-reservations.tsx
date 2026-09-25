@@ -8,11 +8,13 @@ import {
   useAssignRsvpTable,
   useDeleteRsvp,
   useListRsvps,
+  type ChildGroup,
   type ChoiceOption,
   type Rsvp,
 } from '@workspace/api-client-react';
 import { AdminRsvpEditor } from '@/components/admin-rsvp-editor';
 import { optionLabel, shortHeader } from '@/components/rsvp-parts';
+import { childDetail } from '@/lib/child-groups';
 import { matchesSearch } from '@/lib/rsvp-search';
 
 const dateFormat = new Intl.DateTimeFormat('ko-KR', {
@@ -30,6 +32,11 @@ function csvCell(value: string | number) {
   return `"${text.replace(/"/g, '""')}"`;
 }
 
+function childText(child: Rsvp['children'][number]) {
+  const detail = childDetail(child, (age) => `${age}살`);
+  return detail ? `${child.name}(${detail})` : child.name;
+}
+
 function downloadCsv(rsvps: Rsvp[], labels: { isFamilyType: boolean; eventTitle: string; teamLabel: string; deptLabel: string; deptOptions: ChoiceOption[]; messageLabel: string }) {
   const header = labels.isFamilyType
     ? ['가족', '아빠', '엄마', '자녀', '어른 수', '자녀 수', '총 인원', '연락처', labels.deptLabel, labels.teamLabel, '테이블', labels.messageLabel, '등록 일시']
@@ -40,7 +47,7 @@ function downloadCsv(rsvps: Rsvp[], labels: { isFamilyType: boolean; eventTitle:
     ...(labels.isFamilyType
       ? [
           rsvp.motherName,
-          rsvp.children.map((child) => `${child.name}(${child.age}살)`).join(', '),
+          rsvp.children.map((child) => childText(child)).join(', '),
           rsvp.adultCount,
           rsvp.childCount,
           rsvp.guestCount,
@@ -77,9 +84,10 @@ type Props = {
   deptOptions: ChoiceOption[];
   tableCount: number;
   messageLabel: string;
+  childGroups: ChildGroup[];
 };
 
-export function AdminReservations({ tabs, onSignedOut, isFamilyType, eventTitle, teamLabel, deptLabel, deptOptions, tableCount, messageLabel }: Props) {
+export function AdminReservations({ tabs, onSignedOut, isFamilyType, eventTitle, teamLabel, deptLabel, deptOptions, tableCount, messageLabel, childGroups }: Props) {
   const queryClient = useQueryClient();
   const rsvpsQuery = useListRsvps({ query: { queryKey: getListRsvpsQueryKey(), retry: false } });
   const deleteRsvp = useDeleteRsvp();
@@ -153,6 +161,15 @@ export function AdminReservations({ tabs, onSignedOut, isFamilyType, eventTitle,
     [rsvps],
   );
 
+  // Head counts per group, so each group's room can be staffed. Children saved before groups
+  // existed, or under a group since renamed, are counted apart rather than dropped.
+  const groupCounts = useMemo(() => {
+    const kids = rsvps.flatMap((rsvp) => rsvp.children);
+    const groups = childGroups.map((group) => ({ group, count: kids.filter((child) => child.group === group.name).length }));
+    const other = kids.length - groups.reduce((sum, { count }) => sum + count, 0);
+    return { groups, other };
+  }, [rsvps, childGroups]);
+
   // 엄마, 자녀 수, 총 인원 are dropped outside a family event, so the empty rows span fewer columns.
   const columnCount = isFamilyType ? 11 : 8;
 
@@ -188,6 +205,14 @@ export function AdminReservations({ tabs, onSignedOut, isFamilyType, eventTitle,
         <div className="stat highlight"><div className="stat-label">총 참석 예정 인원</div><div className="stat-value" data-testid="text-admin-total">{totals.adults + totals.children}<small>명</small></div></div>
         {isFamilyType && <div className="stat"><div className="stat-label">어른 / 자녀</div><div className="stat-value" data-testid="text-admin-adults-children">{totals.adults} / {totals.children}<small>명</small></div></div>}
       </section>
+      {isFamilyType && groupCounts.groups.length > 0 && (
+        <section className="stats admin-stats admin-group-stats no-print" data-testid="admin-child-groups">
+          {groupCounts.groups.map(({ group, count }, index) => (
+            <div className="stat" key={group.name}><div className="stat-label">{group.name} <em>{group.minAge}–{group.maxAge}살</em></div><div className="stat-value" data-testid={`text-admin-group-${index}`}>{count}<small>명</small></div></div>
+          ))}
+          {groupCounts.other > 0 && <div className="stat"><div className="stat-label">그룹 없음</div><div className="stat-value" data-testid="text-admin-group-other">{groupCounts.other}<small>명</small></div></div>}
+        </section>
+      )}
 
       <label className="search-box no-print">
         <Search size={18} />
@@ -230,7 +255,7 @@ export function AdminReservations({ tabs, onSignedOut, isFamilyType, eventTitle,
                   <td>{rsvp.fatherName || '—'}</td>
                   {isFamilyType && <td>{rsvp.motherName || '—'}</td>}
                   <td className="children-cell">
-                    {isFamilyType && (rsvp.children.length ? rsvp.children.map((child) => child.name).join(', ') : '—')}
+                    {isFamilyType && (rsvp.children.length ? rsvp.children.map((child) => childText(child)).join(', ') : '—')}
                     {rsvp.message && <div className="row-message">“{rsvp.message}”</div>}
                     {!isFamilyType && !rsvp.message && '—'}
                   </td>
@@ -287,7 +312,7 @@ export function AdminReservations({ tabs, onSignedOut, isFamilyType, eventTitle,
         <AdminRsvpEditor
           key={editor.rsvp?.id ?? 'new'}
           rsvp={editor.rsvp}
-          labels={{ isFamilyType, teamLabel, deptLabel, deptOptions, messageLabel }}
+          labels={{ isFamilyType, teamLabel, deptLabel, deptOptions, messageLabel, childGroups }}
           onClose={() => setEditor(null)}
           onSaved={() => { setEditor(null); refreshLists(); }}
           onSignedOut={onSignedOut}
