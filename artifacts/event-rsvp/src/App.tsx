@@ -18,10 +18,12 @@ import RsvpNewPage from '@/pages/rsvp-new';
 
 const queryClient = new QueryClient();
 
-function formatDate(date: string, lang: Lang) {
-  const parsed = new Date(`${date.slice(0, 10)}T12:00:00`);
+// Written the same in both languages: the ISO date, then the weekday in English — "2026-10-18 (Sunday)".
+function formatDate(date: string) {
+  const day = date.slice(0, 10);
+  const parsed = new Date(`${day}T12:00:00`);
   if (Number.isNaN(parsed.getTime())) return date;
-  return new Intl.DateTimeFormat(LOCALE[lang], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(parsed);
+  return `${day} (${new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(parsed)})`;
 }
 
 function formatTime(time: string, lang: Lang) {
@@ -95,7 +97,7 @@ function Invitation() {
         {event.featuredNote && <p className="note" data-testid="text-featured-note">{event.featuredNote}</p>}
 
         <section className="details">
-          <div className="detail"><span className="detail-icon"><CalendarHeart size={18} /></span><div><div className="detail-label">{t.date}</div><div className="detail-value" data-testid="text-event-date">{formatDate(event.date, lang)}</div></div></div>
+          <div className="detail"><span className="detail-icon"><CalendarHeart size={18} /></span><div><div className="detail-label">{t.date}</div><div className="detail-value" data-testid="text-event-date">{formatDate(event.date)}</div></div></div>
           <div className="detail"><span className="detail-icon"><Clock3 size={18} /></span><div><div className="detail-label">{t.time}</div><div className="detail-value" data-testid="text-event-time">{eventTime}</div></div></div>
           <div className="detail">
             <span className="detail-icon"><MapPin size={18} /></span>
