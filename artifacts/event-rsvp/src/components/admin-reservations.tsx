@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Download, Pencil, Plus, Printer, Search, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Download, Pencil, Plus, Printer, Search, Trash2 } from 'lucide-react';
 import {
   ApiError,
   getGetRsvpSummaryQueryKey,
@@ -37,9 +37,14 @@ function childText(child: Rsvp['children'][number]) {
   return detail ? `${child.name}(${detail})` : child.name;
 }
 
-function downloadCsv(rsvps: Rsvp[], labels: { isFamilyType: boolean; eventTitle: string; teamLabel: string; deptLabel: string; deptOptions: ChoiceOption[]; messageLabel: string }) {
+// How many of one family's children are in the named group.
+function groupCount(rsvp: Rsvp, group: ChildGroup) {
+  return rsvp.children.filter((child) => child.group === group.name).length;
+}
+
+function downloadCsv(rsvps: Rsvp[], labels: { isFamilyType: boolean; childGroups: ChildGroup[]; eventTitle: string; teamLabel: string; deptLabel: string; deptOptions: ChoiceOption[]; messageLabel: string }) {
   const header = labels.isFamilyType
-    ? ['가족', '아빠', '엄마', '자녀', '어른 수', '자녀 수', '총 인원', '연락처', labels.deptLabel, labels.teamLabel, '테이블', labels.messageLabel, '등록 일시']
+    ? ['가족', '아빠', '엄마', '자녀', '어른 수', '자녀 수', ...labels.childGroups.map((group) => group.name), '총 인원', '연락처', labels.deptLabel, labels.teamLabel, '테이블', labels.messageLabel, '등록 일시']
     : ['번호', '이름', '연락처', labels.deptLabel, labels.teamLabel, '테이블', labels.messageLabel, '등록 일시'];
   const lines = rsvps.map((rsvp, index) => [
     labels.isFamilyType ? `가족 ${index + 1}` : index + 1,
@@ -50,6 +55,7 @@ function downloadCsv(rsvps: Rsvp[], labels: { isFamilyType: boolean; eventTitle:
           rsvp.children.map((child) => childText(child)).join(', '),
           rsvp.adultCount,
           rsvp.childCount,
+          ...labels.childGroups.map((group) => groupCount(rsvp, group)),
           rsvp.guestCount,
         ]
       : []),
@@ -72,6 +78,33 @@ function downloadCsv(rsvps: Rsvp[], labels: { isFamilyType: boolean; eventTitle:
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+}
+
+// A column is sorted by its key; a group column's key is `group:` plus the group's name.
+type Sort = { key: string; dir: 'asc' | 'desc' } | null;
+type SortValue = string | number | null;
+
+const collator = new Intl.Collator('ko', { numeric: true });
+
+// Empty cells stay at the bottom whichever way the column is sorted.
+function compareSortValues(a: SortValue, b: SortValue, dir: 'asc' | 'desc') {
+  const aEmpty = a === null || a === '';
+  const bEmpty = b === null || b === '';
+  if (aEmpty || bEmpty) return aEmpty === bEmpty ? 0 : aEmpty ? 1 : -1;
+  const order = typeof a === 'number' && typeof b === 'number' ? a - b : collator.compare(String(a), String(b));
+  return dir === 'asc' ? order : -order;
+}
+
+function SortHeader({ label, sortKey, sort, onSort, className, title }: { label: React.ReactNode; sortKey: string; sort: Sort; onSort: (key: string) => void; className?: string; title?: string }) {
+  const dir = sort?.key === sortKey ? sort.dir : null;
+  const Icon = dir === 'asc' ? ArrowUp : dir === 'desc' ? ArrowDown : ArrowUpDown;
+  return (
+    <th className={className} title={title} aria-sort={dir === 'asc' ? 'ascending' : dir === 'desc' ? 'descending' : undefined}>
+      <button type="button" className="sort-button" data-active={dir ? '' : undefined} onClick={() => onSort(sortKey)} data-testid={`sort-${sortKey}`}>
+        {label}<Icon size={13} className="no-print" />
+      </button>
+    </th>
+  );
 }
 
 type Props = {
@@ -99,6 +132,12 @@ export function AdminReservations({ tabs, onSignedOut, isFamilyType, eventTitle,
   // Deleting is confirmed in the row itself, so no browser dialog interrupts the dashboard.
   const [confirmingDelete, setConfirmingDelete] = useState<number | null>(null);
   const [rowError, setRowError] = useState('');
+  const [sort, setSort] = useState<Sort>(null);
+
+  // Each click on a header steps through ascending, descending, then back to sign-up order.
+  function toggleSort(key: string) {
+    setSort((current) => (current?.key !== key ? { key, dir: 'asc' } : current.dir === 'asc' ? { key, dir: 'desc' } : null));
+  }
 
   function refreshLists() {
     void queryClient.invalidateQueries({ queryKey: getListRsvpsQueryKey() });
@@ -170,14 +209,38 @@ export function AdminReservations({ tabs, onSignedOut, isFamilyType, eventTitle,
     return { groups, other };
   }, [rsvps, childGroups]);
 
-  // 엄마, 자녀 수, 총 인원 are dropped outside a family event, so the empty rows span fewer columns.
-  const columnCount = isFamilyType ? 11 : 8;
+  // 엄마, 자녀 수, the group columns and 총 인원 are dropped outside a family event, so the empty rows span fewer columns.
+  const columnCount = isFamilyType ? 11 + childGroups.length : 8;
 
   const rows = useMemo(() => {
     const numbered = rsvps.map((rsvp, index) => ({ rsvp, number: index + 1 }));
-    if (!query.trim() || printing) return numbered;
-    return numbered.filter(({ rsvp }) => matchesSearch(rsvp, query, optionLabel(deptOptions, rsvp.belongDept)));
-  }, [rsvps, query, printing, deptOptions]);
+    const filtered = !query.trim() || printing
+      ? numbered
+      : numbered.filter(({ rsvp }) => matchesSearch(rsvp, query, optionLabel(deptOptions, rsvp.belongDept)));
+    if (!sort) return filtered;
+
+    const valueOf = ({ rsvp, number }: { rsvp: Rsvp; number: number }): SortValue => {
+      if (sort.key.startsWith('group:')) {
+        const name = sort.key.slice('group:'.length);
+        return rsvp.children.filter((child) => child.group === name).length;
+      }
+      switch (sort.key) {
+        case 'number': return number;
+        case 'father': return rsvp.fatherName || null;
+        case 'mother': return rsvp.motherName || null;
+        case 'children': return isFamilyType ? rsvp.children.map((child) => child.name).join(', ') : rsvp.message ?? null;
+        case 'table': return rsvp.tableNumber ?? null;
+        case 'dept': return [optionLabel(deptOptions, rsvp.belongDept), rsvp.belongTeam].filter(Boolean).join(' ');
+        case 'childCount': return rsvp.childCount;
+        case 'guestCount': return rsvp.guestCount;
+        case 'phone': return rsvp.phoneNumber || null;
+        case 'createdAt': return new Date(rsvp.createdAt).getTime();
+        default: return null;
+      }
+    };
+    // Ties keep sign-up order.
+    return [...filtered].sort((a, b) => compareSortValues(valueOf(a), valueOf(b), sort.dir) || a.number - b.number);
+  }, [rsvps, query, printing, deptOptions, sort, isFamilyType]);
 
   return (
     <div className="reservations">
@@ -185,7 +248,7 @@ export function AdminReservations({ tabs, onSignedOut, isFamilyType, eventTitle,
         {tabs}
         <div className="toolbar">
           <button className="btn btn-outline btn-small toolbar-add" type="button" onClick={() => { setRowError(''); setEditor({ rsvp: null }); }} data-testid="button-add-rsvp"><Plus size={18} /> {isFamilyType ? '가족 추가' : '참석자 추가'}</button>
-          <button className="btn btn-outline icon-btn" type="button" title="CSV로 내보내기" aria-label="CSV로 내보내기" disabled={rsvps.length === 0} onClick={() => downloadCsv(rsvps, { isFamilyType, eventTitle, teamLabel, deptLabel, deptOptions, messageLabel })} data-testid="button-export-csv"><Download size={18} /></button>
+          <button className="btn btn-outline icon-btn" type="button" title="CSV로 내보내기" aria-label="CSV로 내보내기" disabled={rsvps.length === 0} onClick={() => downloadCsv(rsvps, { isFamilyType, childGroups, eventTitle, teamLabel, deptLabel, deptOptions, messageLabel })} data-testid="button-export-csv"><Download size={18} /></button>
           <button className="btn btn-outline btn-small toolbar-print" type="button" disabled={rsvps.length === 0} onClick={() => setPrinting(true)} data-testid="button-print"><Printer size={18} /> 명단 · 메시지 인쇄</button>
         </div>
       </div>
@@ -208,7 +271,7 @@ export function AdminReservations({ tabs, onSignedOut, isFamilyType, eventTitle,
       {isFamilyType && groupCounts.groups.length > 0 && (
         <section className="stats admin-stats admin-group-stats no-print" data-testid="admin-child-groups">
           {groupCounts.groups.map(({ group, count }, index) => (
-            <div className="stat" key={group.name}><div className="stat-label">{group.name} <em>{group.minAge}–{group.maxAge}살</em></div><div className="stat-value" data-testid={`text-admin-group-${index}`}>{count}<small>명</small></div></div>
+            <div className="stat" key={group.name}><div className="stat-label">{group.name}</div><div className="stat-value" data-testid={`text-admin-group-${index}`}>{count}<small>명</small></div></div>
           ))}
           {groupCounts.other > 0 && <div className="stat"><div className="stat-label">그룹 없음</div><div className="stat-value" data-testid="text-admin-group-other">{groupCounts.other}<small>명</small></div></div>}
         </section>
@@ -224,16 +287,17 @@ export function AdminReservations({ tabs, onSignedOut, isFamilyType, eventTitle,
         <table className="rsvp-table" data-testid="table-rsvps">
           <thead>
             <tr>
-              <th>{isFamilyType ? '가족' : '번호'}</th>
-              <th>{isFamilyType ? '아빠' : '이름'}</th>
-              {isFamilyType && <th>엄마</th>}
-              <th>{isFamilyType ? '자녀' : messageLabel}</th>
-              <th>테이블</th>
-              <th title={`${deptLabel} · ${teamLabel}`}>{shortHeader(deptLabel)} · {shortHeader(teamLabel)}</th>
-              {isFamilyType && <th className="num">자녀 수</th>}
-              {isFamilyType && <th className="num">총 인원</th>}
-              <th>연락처</th>
-              <th>등록 일시</th>
+              <SortHeader label={isFamilyType ? '가족' : '번호'} sortKey="number" sort={sort} onSort={toggleSort} />
+              <SortHeader label={isFamilyType ? '아빠' : '이름'} sortKey="father" sort={sort} onSort={toggleSort} />
+              {isFamilyType && <SortHeader label="엄마" sortKey="mother" sort={sort} onSort={toggleSort} />}
+              <SortHeader label={isFamilyType ? '자녀' : messageLabel} sortKey="children" sort={sort} onSort={toggleSort} />
+              <SortHeader label="테이블" sortKey="table" sort={sort} onSort={toggleSort} />
+              <SortHeader label={<>{shortHeader(deptLabel)} · {shortHeader(teamLabel)}</>} title={`${deptLabel} · ${teamLabel}`} sortKey="dept" sort={sort} onSort={toggleSort} />
+              {isFamilyType && <SortHeader label="자녀 수" className="num" sortKey="childCount" sort={sort} onSort={toggleSort} />}
+              {isFamilyType && childGroups.map((group) => <SortHeader key={group.name} label={group.name} className="num nowrap" sortKey={`group:${group.name}`} sort={sort} onSort={toggleSort} />)}
+              {isFamilyType && <SortHeader label="총 인원" className="num" sortKey="guestCount" sort={sort} onSort={toggleSort} />}
+              <SortHeader label="연락처" sortKey="phone" sort={sort} onSort={toggleSort} />
+              <SortHeader label="등록 일시" sortKey="createdAt" sort={sort} onSort={toggleSort} />
               <th className="col-actions no-print">관리</th>
             </tr>
           </thead>
@@ -283,6 +347,7 @@ export function AdminReservations({ tabs, onSignedOut, isFamilyType, eventTitle,
                     ) : '—'}
                   </td>
                   {isFamilyType && <td className="num">{rsvp.childCount}</td>}
+                  {isFamilyType && childGroups.map((group) => <td className="num" key={group.name}>{groupCount(rsvp, group)}</td>)}
                   {isFamilyType && <td className="num strong">{rsvp.guestCount}</td>}
                   <td className="nowrap">{rsvp.phoneNumber || '—'}</td>
                   <td className="muted-cell nowrap">{dateFormat.format(new Date(rsvp.createdAt))}</td>

@@ -1,4 +1,4 @@
-import type { ChildGroup, RsvpChild } from '@workspace/api-client-react';
+import type { RsvpChild } from '@workspace/api-client-react';
 
 // A child row as typed: a name and the name of the group picked for it. A child saved
 // before groups existed keeps its age in `age`, so the admin can see it while picking.
@@ -14,11 +14,6 @@ export function childRowFrom(child: RsvpChild): ChildRow {
 
 export function toChild(row: ChildRow): RsvpChild {
   return { name: row.name.trim(), group: row.group };
-}
-
-// How a group reads in a picker: its name with the ages it covers, e.g. "그룹 1 · 0–3살".
-export function groupLabel(group: ChildGroup, ages: (min: number, max: number) => string): string {
-  return `${group.name} · ${ages(group.minAge, group.maxAge)}`;
 }
 
 // What follows a saved child's name: its group, or the age older RSVPs were saved with.

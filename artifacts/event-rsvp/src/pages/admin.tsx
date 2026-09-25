@@ -182,12 +182,9 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
       return reject('rsvp', '소속 부서 선택지의 저장 값이 중복됐어요.');
     }
 
-    // The guest picks a group by its name, so names must be unique; the ages are only shown beside it.
+    // The guest picks a group by its name, so names must be unique.
     const groups = form!.childGroups.map((group) => ({ ...group, name: group.name.trim() }));
     if (groups.some((group) => !group.name)) return reject('rsvp', '자녀 그룹 이름을 입력해 주세요.');
-    if (groups.some((group) => ![group.minAge, group.maxAge].every((age) => Number.isInteger(age) && age >= 0 && age <= 30) || group.minAge > group.maxAge)) {
-      return reject('rsvp', '자녀 그룹 나이는 0~30살이고, 시작 나이가 끝 나이보다 클 수 없어요.');
-    }
     if (new Set(groups.map((group) => group.name)).size !== groups.length) return reject('rsvp', '자녀 그룹 이름이 중복됐어요.');
 
     updateEvent.mutate(
@@ -389,20 +386,12 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
         <section className="admin-section">
           <h2>자녀 그룹 <span className="admin-muted">손님이 자녀마다 고를 그룹을 정해요</span></h2>
           <div className="admin-subsection">
-            <h3>그룹 <span className="admin-muted">RSVP 화면에서 자녀마다 이 중 하나를 골라요 · 나이는 그룹 이름 옆에 안내로만 보여요 · 그룹을 모두 지우면 자녀 이름만 받아요</span></h3>
+            <h3>그룹 <span className="admin-muted">RSVP 화면에서 자녀마다 이 중 하나를 골라요 · 그룹을 모두 지우면 자녀 이름만 받아요</span></h3>
             {form.childGroups.map((group, index) => (
               <div className="group-row" key={index}>
                 <label className="field">
                   <span>그룹 이름</span>
                   <input value={group.name} maxLength={30} onChange={(e) => setGroup(index, { name: e.target.value })} data-testid={`input-child-group-name-${index}`} />
-                </label>
-                <label className="field">
-                  <span>시작 나이</span>
-                  <input type="number" min={0} max={30} inputMode="numeric" value={group.minAge} onChange={(e) => setGroup(index, { minAge: Number(e.target.value) })} data-testid={`input-child-group-min-${index}`} />
-                </label>
-                <label className="field">
-                  <span>끝 나이</span>
-                  <input type="number" min={0} max={30} inputMode="numeric" value={group.maxAge} onChange={(e) => setGroup(index, { maxAge: Number(e.target.value) })} data-testid={`input-child-group-max-${index}`} />
                 </label>
                 <button type="button" className="remove" onClick={() => set('childGroups', form.childGroups.filter((_, at) => at !== index))} data-testid={`button-remove-child-group-${index}`}><Trash2 size={14} /> 삭제</button>
               </div>
@@ -411,10 +400,8 @@ function EventEditor({ onSignedOut, onPreview }: { onSignedOut: () => void; onPr
               <button
                 type="button"
                 className="btn btn-dashed"
-                onClick={() => {
-                  const from = form.childGroups.reduce((oldest, group) => Math.max(oldest, group.maxAge + 1), 0);
-                  set('childGroups', [...form.childGroups, { name: `그룹 ${form.childGroups.length + 1}`, minAge: Math.min(from, 30), maxAge: Math.min(from + 2, 30) }]);
-                }}
+                // Ages are no longer used; the API still stores them, so new groups get zeros.
+                onClick={() => set('childGroups', [...form.childGroups, { name: `그룹 ${form.childGroups.length + 1}`, minAge: 0, maxAge: 0 }])}
                 data-testid="button-add-child-group"
               ><Plus size={16} /> 그룹 추가</button>
             )}

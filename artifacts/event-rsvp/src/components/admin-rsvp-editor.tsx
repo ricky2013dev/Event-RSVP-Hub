@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Plus, Trash2, X } from 'lucide-react';
 import { ApiError, useCreateRsvp, useUpdateRsvp, type ChildGroup, type ChoiceOption, type Rsvp } from '@workspace/api-client-react';
 import { formatPhone } from '@/components/rsvp-parts';
-import { childRowFrom, groupLabel, newChildRow, toChild, type ChildRow } from '@/lib/child-groups';
+import { childRowFrom, newChildRow, toChild, type ChildRow } from '@/lib/child-groups';
 
 const MAX_CHILDREN = 10;
 
@@ -123,7 +123,7 @@ export function AdminRsvpEditor({ rsvp, labels, onClose, onSaved, onSignedOut }:
                 {labels.childGroups.length > 0 && (
                   <select value={child.group} onChange={(e) => updateChild(child.key, (row) => ({ ...row, group: e.target.value }))} data-testid={`select-edit-child-group-${index}`}>
                     <option value="" disabled>{child.age != null ? `그룹 선택 (${child.age}살)` : '그룹 선택'}</option>
-                    {labels.childGroups.map((group) => <option key={group.name} value={group.name}>{groupLabel(group, (min, max) => `${min}–${max}살`)}</option>)}
+                    {labels.childGroups.map((group) => <option key={group.name} value={group.name}>{group.name}</option>)}
                   </select>
                 )}
                 <button type="button" className="remove" onClick={() => setChildren((rows) => rows.filter((row) => row.key !== child.key))} data-testid={`button-remove-edit-child-${index}`}><Trash2 size={14} /> 삭제</button>

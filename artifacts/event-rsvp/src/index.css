@@ -274,7 +274,7 @@ a.btn { text-decoration: none; }
 .child-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 /* Without child groups the name has the row to itself. */
 .child-cols > :only-child { grid-column: 1 / -1; }
-.group-row { display: grid; grid-template-columns: 1fr 4.5rem 4.5rem auto; gap: 8px; align-items: end; }
+.group-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
 .btn-dashed { min-height: 46px; border: 1px dashed var(--gold-soft); background: transparent; color: var(--gold); font-size: .95rem; }
 .btn-dashed:hover { background: var(--tint); }
 .btn-ghost { min-height: 46px; border: 0; background: transparent; color: var(--muted); font-size: .95rem; }
@@ -354,6 +354,10 @@ a.btn { text-decoration: none; }
 .photo-edit-actions { display: flex; flex-direction: column; gap: 8px; flex: 1; }
 .file-btn { position: relative; min-height: 46px; font-size: .95rem; cursor: pointer; }
 .file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.submit-warn { display: flex; align-items: flex-start; gap: 10px; margin: 18px 0 14px; padding: 14px 16px; border: 1.5px solid #e0a53a; border-radius: 12px; background: #fff4dc; color: #7a4b06; }
+.submit-warn svg { flex: none; margin-top: 2px; color: #d08a12; }
+.submit-warn strong { display: block; font-size: .98rem; margin-bottom: 4px; }
+.submit-warn p { margin: 0; font-size: .9rem; line-height: 1.55; }
 .notice { display: flex; align-items: center; gap: 6px; margin: 16px 0 0; padding: 10px 12px; border-radius: 10px; background: #eef6ec; color: #4c7a45; font-size: .88rem; }
 .admin-form .error { margin-top: 16px; }
 .sticky-save { position: sticky; bottom: 12px; margin-top: 16px; z-index: 5; }
@@ -425,6 +429,10 @@ a.btn { text-decoration: none; }
 .rsvp-table th { padding: 16px 20px; text-align: left; font-weight: 400; font-size: .85rem; color: var(--muted); background: var(--cream); white-space: nowrap; }
 .rsvp-table td { padding: 18px 20px; border-top: 1px solid var(--line); color: var(--ink); vertical-align: top; }
 .rsvp-table .num { text-align: left; white-space: nowrap; }
+.sort-button { display: inline-flex; align-items: center; gap: 4px; padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; white-space: nowrap; }
+.sort-button svg { opacity: .35; }
+.sort-button:hover, .sort-button[data-active] { color: var(--ink); }
+.sort-button:hover svg, .sort-button[data-active] svg { opacity: 1; }
 .rsvp-table .strong { font-weight: 700; }
 .rsvp-table .muted-cell { color: var(--muted); }
 .rsvp-table .nowrap { white-space: nowrap; }
@@ -555,8 +563,6 @@ a.btn { text-decoration: none; }
    viewport height and every vertical gap tightens, so tall phones still get a big
    photo while short ones give the space to the details and the buttons. */
 @media (max-width: 640px) {
-  .group-row { grid-template-columns: 1fr 1fr; }
-  .group-row > .field:first-child { grid-column: 1 / -1; }
   .page { padding: 6px 12px 12px; }
   .topbar { min-height: 0; margin-bottom: 4px; }
   .card { padding: 18px 16px 14px; --photo-size: clamp(88px, 14dvh, 190px); }

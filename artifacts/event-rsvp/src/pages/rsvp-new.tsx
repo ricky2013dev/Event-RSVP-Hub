@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
-import { Baby, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Baby, Pencil, Plus, Trash2, TriangleAlert } from 'lucide-react';
 import {
   getGetRsvpConfirmationQueryKey,
   getGetRsvpSummaryQueryKey,
@@ -111,6 +111,13 @@ function RsvpForm({ event }: { event: Event }) {
           family={{ fatherName: fatherName.trim(), motherName: motherName.trim(), phone: phoneNumber.trim(), belongDept: deptLabel ? belongDept.trim() : null, belongTeam: teamLabel ? belongTeam.trim() : null, children: completeChildren, message: messageLabel ? message.trim() : null }}
         />
         <TotalBar adults={adultCount} children={completeChildren.length} isFamilyType={isFamilyType} testId="text-confirm-total" />
+        <div className="submit-warn" role="note" data-testid="text-submit-warning">
+          <TriangleAlert size={20} aria-hidden="true" />
+          <div>
+            <strong>{t.confirmWarnTitle}</strong>
+            <p>{t.confirmWarn}</p>
+          </div>
+        </div>
         {submitError && <p className="error" role="alert">{submitError}</p>}
         <button className="btn btn-primary" type="button" onClick={submit} disabled={createRsvp.isPending} data-testid="button-submit-rsvp">{createRsvp.isPending ? t.submitting : t.submit}</button>
         <button className="btn btn-ghost" type="button" onClick={() => setStep('form')} disabled={createRsvp.isPending} data-testid="button-edit-form"><Pencil size={15} /> {t.editAgain}</button>
